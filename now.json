@@ -6,5 +6,17 @@
     { "src": "cockroachdb/*.py", "use": "@now/python", "config": { "maxLambdaSize": "50mb" } },
     { "src": "scripts/movr.py", "use": "@now/python", "config": { "maxLambdaSize": "50mb" } },
     { "src": "scripts/models.py", "use": "@now/python", "config": { "maxLambdaSize": "50mb" } }
-  ]
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/index.py" }
+  ],
+  "env": {
+    "MOVR_DATABASE_URL": "@movr-connection-string",
+    "DUB_MOVR_DATABASE_URL": "@dub_movr-connection-string",
+    "IAD_MOVR_DATABASE_URL": "@iad_movr-connection-string",
+    "SFO_MOVR_DATABASE_URL": "@sfo_movr-connection-string"
+
+  },
+  "regions": ["sfo1", "iad1", "dub1"]
+
 }
