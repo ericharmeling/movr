@@ -1,9 +1,12 @@
 from flask import Flask, Response, __version__
 from flask import request
-from scripts.movr import MovR
-import json
-import os
 from urllib.parse import parse_qs, urlsplit, urlunsplit, urlencode
+import json
+import os, sys
+from scripts.movr import MovR
+
+
+
 
 app = Flask(__name__)
 source = 'https://github.com/zeit/now-examples/tree/master/python-flask'
