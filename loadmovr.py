@@ -1,19 +1,28 @@
 #!/usr/bin/python
 
-from movr import MovR
-from generators import MovRGenerator
 import argparse
-import sys, os, time, datetime, random, math, signal, threading, re
+import datetime
 import logging
-from faker import Faker
-from models import User, Vehicle, Ride, VehicleLocationHistory, PromoCode
-from cockroachdb.sqlalchemy import run_transaction
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-from urllib.parse import parse_qs, urlsplit, urlunsplit, urlencode
-from movr_stats import MovRStats
-from tabulate import tabulate
+import math
+import os
+import random
+import re
+import signal
+import sys
+import threading
+import time
 
+from faker import Faker
+from generators import MovRGenerator
+from movr import MovR
+from movr_stats import MovRStats
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from tabulate import tabulate
+from urllib.parse import parse_qs, urlsplit, urlunsplit, urlencode
+
+from cockroachdb.sqlalchemy import run_transaction
+from scripts.models import User, Vehicle, Ride, VehicleLocationHistory, PromoCode
 
 RUNNING_THREADS = []
 TERMINATE_GRACEFULLY = False

@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "movr-now",
+  "builds": [
+    { "src": "index.py", "use": "@now/python", "config": { "maxLambdaSize": "50mb" } },
+    { "src": "cockroachdb/*.py", "use": "@now/python", "config": { "maxLambdaSize": "50mb" } },
+    { "src": "scripts/movr.py", "use": "@now/python", "config": { "maxLambdaSize": "50mb" } },
+    { "src": "scripts/models.py", "use": "@now/python", "config": { "maxLambdaSize": "50mb" } }
+  ]
+}
