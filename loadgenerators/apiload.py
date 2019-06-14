@@ -12,6 +12,7 @@ import sys
 import threading
 import time
 import requests
+from requests.utils import quote
 
 sys.path.append(os.path.abspath('../'))
 from scripts.generators import MovRGenerator
@@ -83,7 +84,8 @@ def simulate_movr_load(api_url, cities):
         active_city = random.choice(cities)
 
         start = time.time()
-        r = requests.get(api_url)
+        url = api_url + '/api/vehicles/'+quote(active_city)+'.json'
+        r = requests.get(url)
         stats.add_latency_measurement("get vehicles", time.time() - start)
 
 
@@ -142,7 +144,6 @@ def set_query_parameter(url, param_name, param_value):
 
 def setup_parser():
     parser = argparse.ArgumentParser(description='CLI for MovR.')
-    subparsers = parser.add_subparsers(dest='subparser_name')
 
     ###########
     # GENERAL COMMANDS
@@ -154,18 +155,11 @@ def setup_parser():
     parser.add_argument('--url', dest='conn_string',
                         help="connection string to movr database. Default is 'postgres://root@localhost:26257/movr?sslmode=disable'")
 
-
-    ###############
-    # RUN COMMANDS
-    ###############
-    run_parser = subparsers.add_parser('run', help="generate fake traffic for the movr database")
-
-    run_parser.add_argument('--city', dest='city', action='append',
+    parser.add_argument('--city', dest='city', action='append',
                             help='The names of the cities to use when generating load. Use this flag multiple times to add multiple cities.')
-    run_parser.add_argument('--read-only-percentage', dest='read_percentage', type=float,
+    parser.add_argument('--read-only-percentage', dest='read_percentage', type=float,
                             help='Value between 0-1 indicating how many simulated read-only home screen loads to perform as a percentage of overall activities',
                             default=.95)
-
     return parser
 
 
@@ -228,7 +222,7 @@ if __name__ == '__main__':
     print(conn_string)
 
 
-    run_load_generator(conn_string, .95, ["new york"], args.num_threads)
+    run_load_generator(conn_string, args.read_percentage, args.city, args.num_threads)
 
 
 
