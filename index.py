@@ -3,6 +3,7 @@ from flask import request
 from scripts.movr import MovR
 import json
 import os
+from urllib.parse import parse_qs, urlsplit, urlunsplit, urlencode
 
 app = Flask(__name__)
 source = 'https://github.com/zeit/now-examples/tree/master/python-flask'
@@ -15,6 +16,12 @@ connection_string_map = {
     "sfo1": os.environ["SFO_MOVR_DATABASE_URL"]
 }
 
+def set_query_parameter(url, param_name, param_value):
+    scheme, netloc, path, query_string, fragment = urlsplit(url)
+    query_params = parse_qs(query_string)
+    query_params[param_name] = [param_value]
+    new_query_string = urlencode(query_params, doseq=True)
+    return urlunsplit((scheme, netloc, path, new_query_string, fragment))
 
 @app.route('/api')
 def index():
@@ -25,6 +32,7 @@ def index():
 def handle_vehicles_request(city):
     region = os.environ["NOW_REGION"]
     conn_string = connection_string_map.get(region,os.environ["MOVR_DATABASE_URL"])
+    conn_string = set_query_parameter(conn_string, "application_name", region)
 
     with MovR(conn_string, echo=False) as movr:
         if request.method == 'PUT':
