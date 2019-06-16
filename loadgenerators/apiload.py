@@ -74,7 +74,6 @@ DEFAULT_PARTITION_MAP = {
 
 def simulate_movr_load(api_url, cities):
 
-
     while True:
 
         if TERMINATE_GRACEFULLY:
@@ -86,6 +85,7 @@ def simulate_movr_load(api_url, cities):
         start = time.time()
         url = api_url + '/api/vehicles/'+quote(active_city)+'.json'
         r = requests.get(url)
+        print(url,r)
         stats.add_latency_measurement("get vehicles", time.time() - start)
 
 
@@ -152,7 +152,7 @@ def setup_parser():
                             help='The number threads to use for MovR (default =5)')
     parser.add_argument('--log-level', dest='log_level', default='info',
                         help='The log level ([debug|info|warning|error]) for MovR messages. (default = info)')
-    parser.add_argument('--url', dest='conn_string',
+    parser.add_argument('--now-url', dest='conn_string', required=True,
                         help="connection string to movr database. Default is 'postgres://root@localhost:26257/movr?sslmode=disable'")
 
     parser.add_argument('--city', dest='city', action='append',
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     print(conn_string)
 
 
-    run_load_generator(conn_string, args.read_percentage, args.city, args.num_threads)
+    run_load_generator(conn_string, args.read_percentage, get_cities(args.city), args.num_threads)
 
 
 
