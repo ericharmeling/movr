@@ -82,15 +82,15 @@ def create_promo_code():
 
         return json.dumps({'promo_code': promo_code})
 
-@app.route('/api/<city>/users/promo_codes.json', methods=['POST'])
-def apply_promo_code(city):
+@app.route('/api/<city>/users/<user_id>/promo_codes.json', methods=['POST'])
+def apply_promo_code(city, user_id):
     region = os.environ["NOW_REGION"]
     conn_string = connection_string_map.get(region, os.environ["MOVR_DATABASE_URL"])
     conn_string = set_query_parameter(conn_string, "application_name", region)
     with MovR(conn_string, echo=False) as movr:
         content = request.json
-        movr.apply_promo_code(city, content['user_id'],
-                              content['promo_code_id'])
+        movr.apply_promo_code(city, user_id,
+                              content['promo_code'])
         return json.dumps({})
 
 

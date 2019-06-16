@@ -93,6 +93,13 @@ def create_promo_code(api_url):
                                'rules': {"type": "percent_discount", "value": "10%"}}),
                          headers = headers).json()['promo_code']
 
+def apply_promo_code(api_url, city, user_id, promo_code):
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    url = api_url + '/api/'+ quote(city) +'/users/' + user_id + '/promo_codes.json'
+    return requests.post(url, data=json.dumps({'promo_code': promo_code}),
+                         headers=headers)
+
+
 def simulate_movr_load(api_url, cities, movr_objects, active_rides, read_percentage):
 
     while True:
@@ -117,7 +124,7 @@ def simulate_movr_load(api_url, cities, movr_objects, active_rides, read_percent
                 stats.add_latency_measurement(ACTION_UPDATE_RIDE_LOC, time.time() - start)
 
             # do write operations randomly
-            if random.random() < 1:
+            if random.random() < 0:
                 # simulate a movr marketer creating a new promo code
                 start = time.time()
 
@@ -125,14 +132,15 @@ def simulate_movr_load(api_url, cities, movr_objects, active_rides, read_percent
                 print('promo_code', promo_code)
                 stats.add_latency_measurement(ACTION_NEW_CODE, time.time() - start)
                 movr_objects["global"].get("promo_codes", []).append(promo_code)
-            #
-            #
-            # elif random.random() < .1:
-            #     # simulate a user applying a promo code to her account
-            #     start = time.time()
-            #     movr.apply_promo_code(active_city, random.choice(movr_objects["local"][active_city]["users"])['id'],
-            #                           random.choice(movr_objects["global"]["promo_codes"]))
-            #     stats.add_latency_measurement(ACTION_APPLY_CODE, time.time() - start)
+
+
+            elif random.random() < 1:
+                # simulate a user applying a promo code to her account
+                start = time.time()
+                apply_promo_code(api_url, active_city, random.choice(movr_objects["local"][active_city]["users"])['id'],
+                                 random.choice(movr_objects["global"]["promo_codes"]))
+                stats.add_latency_measurement(ACTION_APPLY_CODE, time.time() - start)
+
             # elif random.random() < .3:
             #     # simulate new signup
             #     start = time.time()
