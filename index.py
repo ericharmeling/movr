@@ -28,18 +28,18 @@ def set_query_parameter(url, param_name, param_value):
 
 @app.route('/api')
 def index():
-    return json.dumps({"respond": "MovR API"})
+    region = os.environ["NOW_REGION"]
+    return json.dumps({'region':region, "status": "OK", "response": "MovR API"})
 
-#@todo: switch this to use originiation based on the environment
-#@todo: catch exceptions and return error messages
-@app.route('/api/vehicles/<city>.json', methods=['GET', 'PUT'])
+#@todo: switch this to use vehicle originiation based on the environment
+@app.route('/api/<city>/vehicles.json', methods=['GET', 'POST'])
 def handle_vehicles_request(city):
     region = os.environ["NOW_REGION"]
     conn_string = connection_string_map.get(region,os.environ["MOVR_DATABASE_URL"])
     conn_string = set_query_parameter(conn_string, "application_name", region)
 
     with MovR(conn_string, echo=False) as movr:
-        if request.method == 'PUT':
+        if request.method == 'POST':
             content = request.json
             res = movr.add_vehicle(city,
                              owner_id=content['owner_id'],
@@ -50,35 +50,87 @@ def handle_vehicles_request(city):
             return json.dumps({'region':region,'status': 'OK','response': res})
         else:
             count = 5 #request.args.get('count') #@todo: this doens't work yet.
-            return json.dumps({'region':region,'status': 'OK',
+            return json.dumps({'region':region,
                                'response': movr.get_vehicles(city, count)})
 
-@app.route('/api/rides/<city>/<ride_id>/locations.json', methods=['PUT'])
+#@todo: this feels like a sharded app. need to remove city
+@app.route('/api/<city>/rides/<ride_id>/locations.json', methods=['POST'])
 def add_ride_location(city, ride_id):
-    with MovR(os.environ["MOVR_DATABASE_URL"], echo=False) as movr:
+    region = os.environ["NOW_REGION"]
+    conn_string = connection_string_map.get(region, os.environ["MOVR_DATABASE_URL"])
+    conn_string = set_query_parameter(conn_string, "application_name", region)
+    with MovR(conn_string, echo=False) as movr:
         content = request.json
         movr.update_ride_location(city, ride_id, lat=content['lat'],
                                   long=content['long'])
 
-        return json.dumps({'status': "OK"})
+        return json.dumps({})
 
-#
-# @app.route('/api/vehicles/<city>')
-# def create_promo_code():
-#     return {}
-#
-# @app.route('/api/vehicles/<city>')
-# def apply_promo_code():
-#     return {}
-#
-# @app.route('/api/vehicles/<city>')
-# def add_user():
-#     return {}
-#
-# @app.route('/api/vehicles/<city>')
-# def start_ride():
-#     return {}
-#
-# @app.route('/api/vehicles/<city>')
-# def end_ride():
-#     return {}
+
+@app.route('/api/promo_codes.json', methods=['POST'])
+def create_promo_code():
+    region = os.environ["NOW_REGION"]
+    conn_string = connection_string_map.get(region, os.environ["MOVR_DATABASE_URL"])
+    conn_string = set_query_parameter(conn_string, "application_name", region)
+    with MovR(conn_string, echo=False) as movr:
+        content = request.json
+        promo_code = movr.create_promo_code(
+            code=content['code'],
+            description=content['description'],
+            expiration_time=content['expiration_time'],
+            rules=content['rules'])
+
+        return json.dumps({'promo_code': promo_code})
+
+@app.route('/api/<city>/users/promo_codes.json', methods=['POST'])
+def apply_promo_code(city):
+    region = os.environ["NOW_REGION"]
+    conn_string = connection_string_map.get(region, os.environ["MOVR_DATABASE_URL"])
+    conn_string = set_query_parameter(conn_string, "application_name", region)
+    with MovR(conn_string, echo=False) as movr:
+        content = request.json
+        movr.apply_promo_code(city, content['user_id'],
+                              content['promo_code_id'])
+        return json.dumps({})
+
+
+
+@app.route('/api/<city>/users.json', methods=['POST'])
+def add_user(city):
+    region = os.environ["NOW_REGION"]
+    conn_string = connection_string_map.get(region, os.environ["MOVR_DATABASE_URL"])
+    conn_string = set_query_parameter(conn_string, "application_name", region)
+    with MovR(conn_string, echo=False) as movr:
+        content = request.json
+        movr.add_user(city,
+                      content['name'],
+                      content['address'],
+                      content['credit_card_number'])
+
+@app.route('/api/<city>/rides.json', methods=['POST', 'GET'])
+def handle_ride_request(city):
+    region = os.environ["NOW_REGION"]
+    conn_string = connection_string_map.get(region, os.environ["MOVR_DATABASE_URL"])
+    conn_string = set_query_parameter(conn_string, "application_name", region)
+    with MovR(conn_string, echo=False) as movr:
+        if request.method == 'POST':
+            content = request.json
+            ride = movr.start_ride(city,
+                                   content['user_id'],
+                                   content['vehicle_id'])
+
+            return json.dumps({'ride': ride})
+        else:
+            # get active rides
+            rides = movr.get_active_rides(city)
+            return json.dumps({'rides': rides})
+
+
+@app.route('/api/<city>/rides/<ride_id>.json', methods=['POST'])
+def end_ride(city, ride_id):
+    region = os.environ["NOW_REGION"]
+    conn_string = connection_string_map.get(region, os.environ["MOVR_DATABASE_URL"])
+    conn_string = set_query_parameter(conn_string, "application_name", region)
+    with MovR(conn_string, echo=False) as movr:
+        movr.end_ride(city, ride_id)
+        return {{}}

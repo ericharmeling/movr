@@ -7,6 +7,7 @@ import math
 import os
 import random
 import re
+import json
 import signal
 import sys
 import threading
@@ -72,7 +73,27 @@ DEFAULT_PARTITION_MAP = {
 # Generates evenly distributed load among the provided cities
 
 
-def simulate_movr_load(api_url, cities):
+def get_vehicles(api_url, city):
+    url = api_url + '/api/' + quote(city) + '/vehicles.json'
+    return requests.get(url)
+
+def update_location_history(api_url, city, ride_id):
+    latlong = MovRGenerator.generate_random_latlong()
+    url = api_url + '/api/' + quote(city) + '/rides/' + ride_id + '/locations.json'
+    return requests.post(url, data=json.dumps({'lat': latlong['lat'], 'long': latlong['long']}))
+
+def create_promo_code(api_url):
+    datagen = Faker()
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    url = api_url + '/api/promo_codes.json'
+    return requests.post(url, data=json.dumps({'code': "_".join(datagen.words(nb=3)) + "_" + str(time.time()),
+                               'description':datagen.paragraph(),
+                               'expiration_time': str(datetime.datetime.now() + datetime.timedelta(
+                        days=random.randint(0, 30))),
+                               'rules': {"type": "percent_discount", "value": "10%"}}),
+                         headers = headers).json()['promo_code']
+
+def simulate_movr_load(api_url, cities, movr_objects, active_rides, read_percentage):
 
     while True:
 
@@ -82,11 +103,71 @@ def simulate_movr_load(api_url, cities):
 
         active_city = random.choice(cities)
 
-        start = time.time()
-        url = api_url + '/api/vehicles/'+quote(active_city)+'.json'
-        r = requests.get(url)
-        print(url,r)
-        stats.add_latency_measurement("get vehicles", time.time() - start)
+        if random.random() < read_percentage:
+            # simulate user loading screen
+            start = time.time()
+            get_vehicles(api_url, active_city)
+            stats.add_latency_measurement("get vehicles", time.time() - start)
+        else:
+            # every write tick, simulate the various vehicles updating their locations if they are being used for rides
+            for ride in active_rides[0:10]:
+
+                start = time.time()
+                update_location_history(api_url, active_city, ride['id'])
+                stats.add_latency_measurement(ACTION_UPDATE_RIDE_LOC, time.time() - start)
+
+            # do write operations randomly
+            if random.random() < 1:
+                # simulate a movr marketer creating a new promo code
+                start = time.time()
+
+                promo_code = create_promo_code(api_url)
+                print('promo_code', promo_code)
+                stats.add_latency_measurement(ACTION_NEW_CODE, time.time() - start)
+                movr_objects["global"].get("promo_codes", []).append(promo_code)
+            #
+            #
+            # elif random.random() < .1:
+            #     # simulate a user applying a promo code to her account
+            #     start = time.time()
+            #     movr.apply_promo_code(active_city, random.choice(movr_objects["local"][active_city]["users"])['id'],
+            #                           random.choice(movr_objects["global"]["promo_codes"]))
+            #     stats.add_latency_measurement(ACTION_APPLY_CODE, time.time() - start)
+            # elif random.random() < .3:
+            #     # simulate new signup
+            #     start = time.time()
+            #     new_user = movr.add_user(active_city, datagen.name(), datagen.address(), datagen.credit_card_number())
+            #     stats.add_latency_measurement(ACTION_NEW_USER, time.time() - start)
+            #     movr_objects["local"][active_city]["users"].append(new_user)
+            #
+            # elif random.random() < .1:
+            #     # simulate a user adding a new vehicle to the population
+            #     start = time.time()
+            #     new_vehicle = movr.add_vehicle(active_city,
+            #                                    owner_id=random.choice(movr_objects["local"][active_city]["users"])[
+            #                                        'id'],
+            #                                    type=MovRGenerator.generate_random_vehicle(),
+            #                                    vehicle_metadata=MovRGenerator.generate_vehicle_metadata(type),
+            #                                    status=MovRGenerator.get_vehicle_availability(),
+            #                                    current_location=datagen.address())
+            #     stats.add_latency_measurement(ACTION_ADD_VEHICLE, time.time() - start)
+            #     movr_objects["local"][active_city]["vehicles"].append(new_vehicle)
+            #
+            # elif random.random() < .5:
+            #     # simulate a user starting a ride
+            #     start = time.time()
+            #     ride = movr.start_ride(active_city, random.choice(movr_objects["local"][active_city]["users"])['id'],
+            #                            random.choice(movr_objects["local"][active_city]["vehicles"])['id'])
+            #     stats.add_latency_measurement(ACTION_START_RIDE, time.time() - start)
+            #     active_rides.append(ride)
+            #
+            # else:
+            #     if len(active_rides):
+            #         # simulate a ride ending
+            #         ride = active_rides.pop()
+            #         start = time.time()
+            #         movr.end_ride(ride['city'], ride['id'])
+            #         stats.add_latency_measurement(ACTION_END_RIDE, time.time() - start)
 
 
 # creates a map of partions when given a list of pairs in the form <partition>:<city_id>.
@@ -152,7 +233,7 @@ def setup_parser():
                             help='The number threads to use for MovR (default =5)')
     parser.add_argument('--log-level', dest='log_level', default='info',
                         help='The log level ([debug|info|warning|error]) for MovR messages. (default = info)')
-    parser.add_argument('--now-url', dest='conn_string', required=True,
+    parser.add_argument('--now-url', dest='conn_string', default='http://localhost:3000',
                         help="connection string to movr database. Default is 'postgres://root@localhost:26257/movr?sslmode=disable'")
 
     parser.add_argument('--city', dest='city', action='append',
@@ -172,10 +253,30 @@ def run_load_generator(conn_string, read_percentage, city_list, num_threads):
 
     logging.info("simulating movr load for cities %s", city_list)
 
+    movr_objects = {"local": {}, "global": {}}
+
+    logging.info("warming up....")
+
+    #get users and vehicles for each city
+    active_rides = []
+    # with MovR(conn_string) as movr:
+    #     active_rides = []
+    #     for city in city_list:
+    #         movr_objects["local"][city] = {"users": movr.get_users(city), "vehicles": movr.get_vehicles(city)}
+    #         if len(list(movr_objects["local"][city]["vehicles"])) == 0 or len(
+    #                 list(movr_objects["local"][city]["users"])) == 0:
+    #             logging.error(
+    #                 "must have users and vehicles for city '%s' in the movr database to generate load. try running with the 'load' command.",
+    #                 city)
+    #             sys.exit(1)
+    #
+    #         active_rides.extend(movr.get_active_rides(city))
+    #     movr_objects["global"]["promo_codes"] = movr.get_promo_codes()
 
     RUNNING_THREADS = []
     for i in range(num_threads):
-        t = threading.Thread(target=simulate_movr_load, args=(conn_string, city_list ))
+        t = threading.Thread(target=simulate_movr_load, args=(conn_string, city_list, movr_objects,
+                                                    active_rides, read_percentage ))
         t.start()
         RUNNING_THREADS.append(t)
 
