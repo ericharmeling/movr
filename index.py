@@ -31,6 +31,7 @@ def index():
     return json.dumps({"respond": "MovR API"})
 
 #@todo: switch this to use originiation based on the environment
+#@todo: catch exceptions and return error messages
 @app.route('/api/vehicles/<city>.json', methods=['GET', 'PUT'])
 def handle_vehicles_request(city):
     region = os.environ["NOW_REGION"]
