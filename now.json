@@ -11,11 +11,7 @@
     { "src": "/api/(.*)", "dest": "/index.py" }
   ],
   "env": {
-    "MOVR_DATABASE_URL": "@movr-connection-string",
-    "DUB_MOVR_DATABASE_URL": "@dub_movr-connection-string",
-    "IAD_MOVR_DATABASE_URL": "@iad_movr-connection-string",
-    "SFO_MOVR_DATABASE_URL": "@sfo_movr-connection-string"
-
+    "MOVR_DATABASE_URL": "@movr-connection-string"
   },
   "regions": ["sfo1", "iad1", "dub1"]
 

@@ -6,7 +6,10 @@ MovR is a fictional ride sharing company. This repo contains links to datasets a
 
 ## API
 
+get vehicles: `curl http://localhost:3000/api/boston/vehicles.json`
+
 add vehicle: `curl -d '{"owner_id":"15556084-a515-4f00-8000-000000014586", "type":"scooter", "vehicle_metadata":{"brand": "Kona", "color": "green"},"status":"available","current_location":"home"}' -H "Content-Type: application/json" -X PUT http://localhost:3000/api/vehicles/boston`
+
 add ride_history: `curl -d '{"lat":10, "long": 14}' -H "Content-Type: application/json" -X PUT http://localhost:3000/api/rides/amsterdam/c0000000-0000-4000-8000-0000000b71b0/locations.json`
 
 ## Getting started
