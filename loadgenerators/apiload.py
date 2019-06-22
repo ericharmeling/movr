@@ -173,9 +173,7 @@ def simulate_movr_load(api_url, cities, movr_objects, active_rides, read_percent
             if random.random() < .03:
                 # simulate a movr marketer creating a new promo code
                 start = time.time()
-
                 promo_code = create_promo_code(api_url)
-                print('promo_code', promo_code)
                 stats.add_latency_measurement(ACTION_NEW_CODE, time.time() - start)
                 movr_objects["global"].get("promo_codes", []).append(promo_code)
 
