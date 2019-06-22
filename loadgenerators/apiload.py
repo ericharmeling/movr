@@ -88,6 +88,13 @@ def add_vehicle(api_url, city, owner_id, type, vehicle_metadata, status, current
                                                                 'current_location': current_location})).json()["vehicle"]
 
 
+def start_ride(api_url, city, user_id, vehicle_id):
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    url = api_url + '/api/' + quote(city) + '/rides.json'
+    return requests.post(url, headers=headers, data=json.dumps({'user_id': user_id,
+                                                                'vehicle_id': vehicle_id})).json()["ride"]
+
+
 def get_users(api_url, city):
     url = api_url + '/api/' + quote(city) + '/users.json'
     return requests.get(url).json()["users"]
@@ -183,7 +190,7 @@ def simulate_movr_load(api_url, cities, movr_objects, active_rides, read_percent
                 stats.add_latency_measurement(ACTION_NEW_USER, time.time() - start)
                 movr_objects["local"][active_city]["users"].append(new_user)
 
-            elif random.random() < 1:
+            elif random.random() < 0:
                 # simulate a user adding a new vehicle to the population
                 start = time.time()
                 new_vehicle = add_vehicle(api_url, active_city,
@@ -195,15 +202,15 @@ def simulate_movr_load(api_url, cities, movr_objects, active_rides, read_percent
                                                current_location=datagen.address())
                 stats.add_latency_measurement(ACTION_ADD_VEHICLE, time.time() - start)
                 movr_objects["local"][active_city]["vehicles"].append(new_vehicle)
-            #
-            # elif random.random() < .5:
-            #     # simulate a user starting a ride
-            #     start = time.time()
-            #     ride = movr.start_ride(active_city, random.choice(movr_objects["local"][active_city]["users"])['id'],
-            #                            random.choice(movr_objects["local"][active_city]["vehicles"])['id'])
-            #     stats.add_latency_measurement(ACTION_START_RIDE, time.time() - start)
-            #     active_rides.append(ride)
-            #
+
+            elif random.random() < 1:
+                # simulate a user starting a ride
+                start = time.time()
+                ride = start_ride(api_url, active_city, random.choice(movr_objects["local"][active_city]["users"])['id'],
+                                       random.choice(movr_objects["local"][active_city]["vehicles"])['id'])
+                stats.add_latency_measurement(ACTION_START_RIDE, time.time() - start)
+                active_rides.append(ride)
+
             # else:
             #     if len(active_rides):
             #         # simulate a ride ending
