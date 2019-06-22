@@ -4,11 +4,11 @@ from urllib.parse import parse_qs, urlsplit, urlunsplit, urlencode
 import os, sys
 from scripts.movr import MovR
 
+#https://stackoverflow.com/questions/27835619/urllib-and-ssl-certificate-verify-failed-error/38666738
 import urllib.request as urlreq
-# ca_file = urlreq.urlopen(os.environ["MOVR_DATABASE_CA"])
-# with open('/tmp/ca.crt','wb') as output:
-#   print("pulling ca from ", os.environ["MOVR_DATABASE_CA"])
-#   output.write(ca_file.read())
+ca_file = urlreq.urlopen(os.environ["MOVR_DATABASE_CA"])
+with open('/tmp/ca.crt','wb') as output:
+  output.write(ca_file.read())
 
 #@todo: use cert
 #@todo: don't 500 if we get requests that aren't sent with json headers.
