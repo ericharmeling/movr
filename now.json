@@ -11,7 +11,8 @@
     { "src": "/api/(.*)", "dest": "/index.py" }
   ],
   "env": {
-    "MOVR_DATABASE_URL": "@movr-connection-string"
+    "MOVR_DATABASE_URL": "@movr-connection-string",
+    "MOVR_DATABASE_CA": "@movr-database-ca"
   },
   "regions": ["sfo1", "iad1", "dub1", "arn1", "bru1", "cdg1", "cle1", "gru1", "lhr1", "pdx1"]
 

@@ -3,10 +3,8 @@
 import argparse
 import datetime
 import logging
-import math
 import os
 import random
-import re
 import json
 import signal
 import sys
@@ -19,16 +17,9 @@ sys.path.append(os.path.abspath('../'))
 from scripts.generators import MovRGenerator
 
 from faker import Faker
-
-from scripts.movr import MovR
 from scripts.movr_stats import MovRStats
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from tabulate import tabulate
 from urllib.parse import parse_qs, urlsplit, urlunsplit, urlencode
 
-from cockroachdb.sqlalchemy import run_transaction
-from scripts.models import User, Vehicle, Ride, VehicleLocationHistory, PromoCode
 
 RUNNING_THREADS = []
 TERMINATE_GRACEFULLY = False
