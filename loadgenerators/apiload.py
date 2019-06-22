@@ -78,6 +78,16 @@ def get_vehicles(api_url, city):
     url = api_url + '/api/' + quote(city) + '/vehicles.json'
     return requests.get(url).json()["vehicles"]
 
+def add_vehicle(api_url, city, owner_id, type, vehicle_metadata, status, current_location):
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    url = api_url + '/api/' + quote(city) + '/vehicles.json'
+    return requests.post(url, headers=headers, data=json.dumps({'owner_id': owner_id,
+                                                                'type': type,
+                                                                'vehicle_metadata': vehicle_metadata,
+                                                                'status': status,
+                                                                'current_location': current_location})).json()["vehicle"]
+
+
 def get_users(api_url, city):
     url = api_url + '/api/' + quote(city) + '/users.json'
     return requests.get(url).json()["users"]
@@ -166,25 +176,25 @@ def simulate_movr_load(api_url, cities, movr_objects, active_rides, read_percent
                                  random.choice(movr_objects["global"]["promo_codes"]))
                 stats.add_latency_measurement(ACTION_APPLY_CODE, time.time() - start)
 
-            elif random.random() < 1:
+            elif random.random() < 0:
                 # simulate new signup
                 start = time.time()
                 new_user = add_user(api_url, active_city, datagen.name(), datagen.address(), datagen.credit_card_number())
                 stats.add_latency_measurement(ACTION_NEW_USER, time.time() - start)
                 movr_objects["local"][active_city]["users"].append(new_user)
-            #
-            # elif random.random() < .1:
-            #     # simulate a user adding a new vehicle to the population
-            #     start = time.time()
-            #     new_vehicle = movr.add_vehicle(active_city,
-            #                                    owner_id=random.choice(movr_objects["local"][active_city]["users"])[
-            #                                        'id'],
-            #                                    type=MovRGenerator.generate_random_vehicle(),
-            #                                    vehicle_metadata=MovRGenerator.generate_vehicle_metadata(type),
-            #                                    status=MovRGenerator.get_vehicle_availability(),
-            #                                    current_location=datagen.address())
-            #     stats.add_latency_measurement(ACTION_ADD_VEHICLE, time.time() - start)
-            #     movr_objects["local"][active_city]["vehicles"].append(new_vehicle)
+
+            elif random.random() < 1:
+                # simulate a user adding a new vehicle to the population
+                start = time.time()
+                new_vehicle = add_vehicle(api_url, active_city,
+                                               owner_id=random.choice(movr_objects["local"][active_city]["users"])[
+                                                   'id'],
+                                               type=MovRGenerator.generate_random_vehicle(),
+                                               vehicle_metadata=MovRGenerator.generate_vehicle_metadata(type),
+                                               status=MovRGenerator.get_vehicle_availability(),
+                                               current_location=datagen.address())
+                stats.add_latency_measurement(ACTION_ADD_VEHICLE, time.time() - start)
+                movr_objects["local"][active_city]["vehicles"].append(new_vehicle)
             #
             # elif random.random() < .5:
             #     # simulate a user starting a ride
