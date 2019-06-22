@@ -13,6 +13,6 @@
   "env": {
     "MOVR_DATABASE_URL": "@movr-connection-string"
   },
-  "regions": ["sfo1", "iad1", "dub1"]
+  "regions": ["sfo1", "iad1", "dub1", "arn1", "bru1", "cdg1", "cle1", "gru1", "lhr1", "pdx1"]
 
 }
