@@ -5,7 +5,7 @@ import os, sys
 from scripts.movr import MovR
 
 
-
+#@todo: don't 500 if we get requests that aren't sent with json headers.
 
 app = Flask(__name__)
 source = 'https://github.com/zeit/now-examples/tree/master/python-flask'
@@ -93,10 +93,11 @@ def add_user(city):
     with MovR(conn_string, echo=False) as movr:
         if request.method == 'POST':
             content = request.json
-            movr.add_user(city,
+            user = movr.add_user(city,
                           content['name'],
                           content['address'],
                           content['credit_card_number'])
+            return jsonify({'user': user})
         else:
             users = movr.get_users(city)
             return jsonify({'users': users})
