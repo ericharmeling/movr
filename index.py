@@ -119,9 +119,12 @@ def handle_ride_request(city):
             return jsonify({'rides': rides})
 
 
+#@todo: posting to this endpoint shouldn't imply ride ending
 @app.route('/api/<city>/rides/<ride_id>.json', methods=['POST'])
 def end_ride(city, ride_id):
     conn_string = make_conn_string(os.environ["NOW_REGION"])
     with MovR(conn_string, echo=False) as movr:
-        movr.end_ride(city, ride_id)
-        return {{}}
+        content = request.json
+        if content['status'] == 'available':
+            movr.end_ride(city, ride_id)
+        return jsonify({})

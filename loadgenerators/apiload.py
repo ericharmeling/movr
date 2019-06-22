@@ -94,6 +94,10 @@ def start_ride(api_url, city, user_id, vehicle_id):
     return requests.post(url, headers=headers, data=json.dumps({'user_id': user_id,
                                                                 'vehicle_id': vehicle_id})).json()["ride"]
 
+def end_ride(api_url, city, ride_id):
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    url = api_url + '/api/' + quote(city) + '/rides/' + ride_id + '.json'
+    return requests.post(url, headers=headers, data=json.dumps({'status': 'available'})).json()
 
 def get_users(api_url, city):
     url = api_url + '/api/' + quote(city) + '/users.json'
@@ -166,7 +170,7 @@ def simulate_movr_load(api_url, cities, movr_objects, active_rides, read_percent
                 stats.add_latency_measurement(ACTION_UPDATE_RIDE_LOC, time.time() - start)
 
             # do write operations randomly
-            if random.random() < 0:
+            if random.random() < .03:
                 # simulate a movr marketer creating a new promo code
                 start = time.time()
 
@@ -176,21 +180,21 @@ def simulate_movr_load(api_url, cities, movr_objects, active_rides, read_percent
                 movr_objects["global"].get("promo_codes", []).append(promo_code)
 
 
-            elif random.random() < 0:
+            elif random.random() < .1:
                 # simulate a user applying a promo code to her account
                 start = time.time()
                 apply_promo_code(api_url, active_city, random.choice(movr_objects["local"][active_city]["users"])['id'],
                                  random.choice(movr_objects["global"]["promo_codes"]))
                 stats.add_latency_measurement(ACTION_APPLY_CODE, time.time() - start)
 
-            elif random.random() < 0:
+            elif random.random() < .3:
                 # simulate new signup
                 start = time.time()
                 new_user = add_user(api_url, active_city, datagen.name(), datagen.address(), datagen.credit_card_number())
                 stats.add_latency_measurement(ACTION_NEW_USER, time.time() - start)
                 movr_objects["local"][active_city]["users"].append(new_user)
 
-            elif random.random() < 0:
+            elif random.random() < .1:
                 # simulate a user adding a new vehicle to the population
                 start = time.time()
                 new_vehicle = add_vehicle(api_url, active_city,
@@ -203,7 +207,7 @@ def simulate_movr_load(api_url, cities, movr_objects, active_rides, read_percent
                 stats.add_latency_measurement(ACTION_ADD_VEHICLE, time.time() - start)
                 movr_objects["local"][active_city]["vehicles"].append(new_vehicle)
 
-            elif random.random() < 1:
+            elif random.random() < .5:
                 # simulate a user starting a ride
                 start = time.time()
                 ride = start_ride(api_url, active_city, random.choice(movr_objects["local"][active_city]["users"])['id'],
@@ -211,13 +215,13 @@ def simulate_movr_load(api_url, cities, movr_objects, active_rides, read_percent
                 stats.add_latency_measurement(ACTION_START_RIDE, time.time() - start)
                 active_rides.append(ride)
 
-            # else:
-            #     if len(active_rides):
-            #         # simulate a ride ending
-            #         ride = active_rides.pop()
-            #         start = time.time()
-            #         movr.end_ride(ride['city'], ride['id'])
-            #         stats.add_latency_measurement(ACTION_END_RIDE, time.time() - start)
+            else:
+                if len(active_rides):
+                    # simulate a ride ending
+                    ride = active_rides.pop()
+                    start = time.time()
+                    end_ride(api_url, ride['city'], ride['id'])
+                    stats.add_latency_measurement(ACTION_END_RIDE, time.time() - start)
 
 
 # creates a map of partions when given a list of pairs in the form <partition>:<city_id>.
@@ -321,7 +325,6 @@ def run_load_generator(conn_string, read_percentage, city_list, num_threads):
 
         active_rides.extend(get_active_rides(conn_string, city))
     movr_objects["global"]["promo_codes"] = get_promo_codes(conn_string)
-    print("movr objects", movr_objects)
 
     RUNNING_THREADS = []
     for i in range(num_threads):
