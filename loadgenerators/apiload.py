@@ -73,9 +73,23 @@ DEFAULT_PARTITION_MAP = {
 # Generates evenly distributed load among the provided cities
 
 
+#@todo: error handling
 def get_vehicles(api_url, city):
     url = api_url + '/api/' + quote(city) + '/vehicles.json'
-    return requests.get(url)
+    return requests.get(url).json()["vehicles"]
+
+def get_users(api_url, city):
+    url = api_url + '/api/' + quote(city) + '/users.json'
+    return requests.get(url).json()["users"]
+
+def get_active_rides(api_url, city):
+    url = api_url + '/api/' + quote(city) + '/rides.json'
+    return requests.get(url).json()["rides"]
+
+def get_promo_codes(api_url):
+    url = api_url + '/api/promo_codes.json'
+    return requests.get(url).json()["promo_codes"]
+
 
 def update_location_history(api_url, city, ride_id):
     latlong = MovRGenerator.generate_random_latlong()
@@ -267,19 +281,19 @@ def run_load_generator(conn_string, read_percentage, city_list, num_threads):
 
     #get users and vehicles for each city
     active_rides = []
-    # with MovR(conn_string) as movr:
-    #     active_rides = []
-    #     for city in city_list:
-    #         movr_objects["local"][city] = {"users": movr.get_users(city), "vehicles": movr.get_vehicles(city)}
-    #         if len(list(movr_objects["local"][city]["vehicles"])) == 0 or len(
-    #                 list(movr_objects["local"][city]["users"])) == 0:
-    #             logging.error(
-    #                 "must have users and vehicles for city '%s' in the movr database to generate load. try running with the 'load' command.",
-    #                 city)
-    #             sys.exit(1)
-    #
-    #         active_rides.extend(movr.get_active_rides(city))
-    #     movr_objects["global"]["promo_codes"] = movr.get_promo_codes()
+
+    for city in city_list:
+        movr_objects["local"][city] = {"users": get_users(conn_string, city), "vehicles": get_vehicles(conn_string, city)}
+        if len(list(movr_objects["local"][city]["vehicles"])) == 0 or len(
+                list(movr_objects["local"][city]["users"])) == 0:
+            logging.error(
+                "must have users and vehicles for city '%s' in the movr database to generate load. try running with the 'load' command.",
+                city)
+            sys.exit(1)
+
+        active_rides.extend(get_active_rides(conn_string, city))
+    movr_objects["global"]["promo_codes"] = get_promo_codes(conn_string)
+    print("movr objects", movr_objects)
 
     RUNNING_THREADS = []
     for i in range(num_threads):

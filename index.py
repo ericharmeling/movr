@@ -1,7 +1,6 @@
 from flask import Flask, Response, __version__
-from flask import request
+from flask import request, jsonify
 from urllib.parse import parse_qs, urlsplit, urlunsplit, urlencode
-import json
 import os, sys
 from scripts.movr import MovR
 
@@ -27,7 +26,7 @@ def make_conn_string(region):
 @app.route('/api')
 def index():
     region = os.environ["NOW_REGION"]
-    return json.dumps({'region':region, "status": "OK", "response": "MovR API"})
+    return jsonify({'region':region, "status": "OK", "response": "MovR API"})
 
 #@todo: switch this to use vehicle originiation based on the environment
 @app.route('/api/<city>/vehicles.json', methods=['GET', 'POST'])
@@ -43,10 +42,10 @@ def handle_vehicles_request(city):
                              vehicle_metadata=content['vehicle_metadata'],
                              status=content['status'],
                              current_location=content['current_location'])
-            return json.dumps({'response': res})
+            return jsonify({'vehicle': res})
         else:
             count = 5 #request.args.get('count') #@todo: this doens't work yet.
-            return json.dumps({'response': movr.get_vehicles(city, count)})
+            return jsonify({'vehicles': movr.get_vehicles(city, count)})
 
 #@todo: this feels like a sharded app. need to remove city
 @app.route('/api/<city>/rides/<ride_id>/locations.json', methods=['POST'])
@@ -57,21 +56,25 @@ def add_ride_location(city, ride_id):
         movr.update_ride_location(city, ride_id, lat=content['lat'],
                                   long=content['long'])
 
-        return json.dumps({})
+        return jsonify({})
 
 
-@app.route('/api/promo_codes.json', methods=['POST'])
+@app.route('/api/promo_codes.json', methods=['POST', 'GET'])
 def create_promo_code():
     conn_string = make_conn_string(os.environ["NOW_REGION"])
     with MovR(conn_string, echo=False) as movr:
-        content = request.json
-        promo_code = movr.create_promo_code(
-            code=content['code'],
-            description=content['description'],
-            expiration_time=content['expiration_time'],
-            rules=content['rules'])
+        if request.method == 'POST':
+            content = request.json
+            promo_code = movr.create_promo_code(
+                code=content['code'],
+                description=content['description'],
+                expiration_time=content['expiration_time'],
+                rules=content['rules'])
 
-        return json.dumps({'promo_code': promo_code})
+            return jsonify({'promo_code': promo_code})
+        else:
+            promo_codes = movr.get_promo_codes()
+            return jsonify({'promo_codes': promo_codes})
 
 @app.route('/api/<city>/users/<user_id>/promo_codes.json', methods=['POST'])
 def apply_promo_code(city, user_id):
@@ -80,19 +83,23 @@ def apply_promo_code(city, user_id):
         content = request.json
         movr.apply_promo_code(city, user_id,
                               content['promo_code'])
-        return json.dumps({})
+        return jsonify({})
 
 
 
-@app.route('/api/<city>/users.json', methods=['POST'])
+@app.route('/api/<city>/users.json', methods=['POST', 'GET'])
 def add_user(city):
     conn_string = make_conn_string(os.environ["NOW_REGION"])
     with MovR(conn_string, echo=False) as movr:
-        content = request.json
-        movr.add_user(city,
-                      content['name'],
-                      content['address'],
-                      content['credit_card_number'])
+        if request.method == 'POST':
+            content = request.json
+            movr.add_user(city,
+                          content['name'],
+                          content['address'],
+                          content['credit_card_number'])
+        else:
+            users = movr.get_users(city)
+            return jsonify({'users': users})
 
 @app.route('/api/<city>/rides.json', methods=['POST', 'GET'])
 def handle_ride_request(city):
@@ -104,11 +111,11 @@ def handle_ride_request(city):
                                    content['user_id'],
                                    content['vehicle_id'])
 
-            return json.dumps({'ride': ride})
+            return jsonify({'ride': ride})
         else:
             # get active rides
             rides = movr.get_active_rides(city)
-            return json.dumps({'rides': rides})
+            return jsonify({'rides': rides})
 
 
 @app.route('/api/<city>/rides/<ride_id>.json', methods=['POST'])
