@@ -10,12 +10,10 @@ ca_file = urlreq.urlopen(os.environ["MOVR_DATABASE_CA"])
 with open('/tmp/ca.crt','wb') as output:
   output.write(ca_file.read())
 
-#@todo: use cert
 #@todo: don't 500 if we get requests that aren't sent with json headers.
 
 app = Flask(__name__)
-source = 'https://github.com/zeit/now-examples/tree/master/python-flask'
-css = '<link rel="stylesheet" href="/css/style.css" />'
+source = 'https://github.com/nstewart/movr-zeit'
 
 def set_query_parameter(url, param_name, param_value):
     scheme, netloc, path, query_string, fragment = urlsplit(url)
@@ -38,7 +36,6 @@ def index():
 @app.route('/api/<city>/vehicles.json', methods=['GET', 'POST'])
 def handle_vehicles_request(city):
     conn_string = make_conn_string(os.environ["NOW_REGION"])
-    print(conn_string)
     with MovR(conn_string, echo=False) as movr:
         if request.method == 'POST':
             content = request.json
