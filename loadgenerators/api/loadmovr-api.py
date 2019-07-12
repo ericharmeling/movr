@@ -13,7 +13,7 @@ import time
 import requests
 from requests.utils import quote
 
-sys.path.append(os.path.abspath('../'))
+sys.path.append(os.path.abspath('../../'))
 from scripts.generators import MovRGenerator
 
 from faker import Faker
