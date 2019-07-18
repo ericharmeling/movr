@@ -13,9 +13,9 @@ import threading
 import time
 
 from faker import Faker
-from generators import MovRGenerator
-from movr import MovR
-from movr_stats import MovRStats
+from scripts.generators import MovRGenerator
+from scripts.movr import MovR
+from scripts.movr_stats import MovRStats
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from tabulate import tabulate

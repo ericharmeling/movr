@@ -1,0 +1,11 @@
+FROM python:3
+
+WORKDIR /usr/src/app
+
+COPY loadmovr-api.py ./
+COPY scripts ./scripts
+COPY loadmovr-api-requirements.txt ./
+
+RUN pip install -r loadmovr-api-requirements.txt
+
+ENTRYPOINT [ "python", "-u", "./loadmovr-api.py"]

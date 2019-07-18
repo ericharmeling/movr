@@ -1,0 +1,12 @@
+FROM python:3
+
+WORKDIR /usr/src/app
+
+COPY loadmovr-db.py ./
+COPY scripts ./scripts
+COPY loadmovr-db-requirements.txt ./
+
+RUN pip install -r loadmovr-db-requirements.txt
+
+ENTRYPOINT [ "python", "-u", "./loadmovr-db.py"]
+
