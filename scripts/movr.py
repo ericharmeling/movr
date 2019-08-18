@@ -1,8 +1,9 @@
 from cockroachdb.sqlalchemy import run_transaction
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, cast
 from sqlalchemy.orm import sessionmaker
 from scripts.models import Base, User, Vehicle, Ride, VehicleLocationHistory, PromoCode, UserPromoCode
 from sqlalchemy.dialects import registry
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 registry.register("cockroachdb", "cockroachdb.sqlalchemy.dialect", "CockroachDBDialect")
 
 #https://docs.sqlalchemy.org/en/13/core/connections.html#registering-new-dialects
@@ -115,14 +116,14 @@ class MovR:
     def get_vehicles(self, city, limit=None):
         def get_vehicles_helper(session, city, limit=None):
             vehicles = session.query(Vehicle).filter_by(city=city).limit(limit).all()
-            return list(map(lambda vehicle: {'city': vehicle.city, 'id': vehicle.id}, vehicles))
+            return list(map(lambda vehicle: {'city': vehicle.city, 'id': vehicle.id, 'type': vehicle.type, 'status': vehicle.status, 'ext': vehicle.ext}, vehicles))
 
         return run_transaction(sessionmaker(bind=self.engine), lambda session: get_vehicles_helper(session, city, limit))
 
     def get_active_rides(self, city, limit=None):
         def get_active_rides_helper(session, city, limit=None):
-            rides = session.query(Ride).filter_by(city=city, end_time=None).limit(limit).all()
-            return list(map(lambda ride: {'city': city, 'id': ride.id}, rides))
+            rides = session.query(Ride).filter_by(city=city).limit(limit).all()
+            return list(map(lambda ride: {'city': ride.city, 'id': ride.id, 'vehicle_id': ride.vehicle_id, 'start_time': ride.start_time, 'end_time': ride.end_time}, rides))
 
         return run_transaction(sessionmaker(bind=self.engine),
                                lambda session: get_active_rides_helper(session, city, limit))
