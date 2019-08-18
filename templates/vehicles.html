@@ -1,0 +1,60 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<h1>Vehicles</h1>
+{% if login_err != null or login_err != '' %}
+<h3>{{ login_err }}</h3>
+<hr>
+{% endif %}
+<h3>Vehicle List</h3>
+<div class="list-group">
+    {% for vehicle in vehicles %}
+    <a class="list-group-item list-group-item-action flex-column align-items-start">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="text-capitalize">{{ vehicle.type }}</h5>
+        </div>
+      <p class="mb-1">Vehicle ID: {{ vehicle.id }}</p>
+      <p class="mb-1">This {{ vehicle.type }} is located in <bf class="text-capitalize">{{ vehicle.city }}</bf>.</p>
+      {% for i in vehicle.ext %}
+      <p class="mb-1"><bf class="text-capitalize">{{ i }}</bf>: <bf class="text-capitalize">{{ vehicle.ext[i] }}</bf></p>
+      {% endfor %}
+      {% if vehicle.status == 'available' %}
+      <p class="mb-1">The vehicle is currently <font color="green">available</font>. You can ride this vehicle!</p>
+      <form action="/rides/start" method="POST">
+        <div class="form-group">
+          <label for="rider_id">Rider ID</label>
+          <input class="form-control" type="text" name="rider_id" id="rider_id" placeholder="What is the rider's ID?">
+        </div>
+        <div class="form-group">
+            <input class="form-control" readonly type="hidden" id="vehicle_id" name="vehicle_id" value="{{ vehicle.id }}">
+        </div>
+        <div class="form-group">
+            <input class="form-control" readonly type="hidden" id="city" name="city" value="{{ vehicle.city }}">
+        </div>
+        <button class="btn btn-primary">Start</button>
+      </form>
+      {% else %}
+      <p class="mb-1">The vehicle is currently <font color="red">unavailable</font>.</p>
+      {% endif %}
+    </a>
+    {% endfor %}
+</div>
+<hr>
+<h3>Add a vehicle</h3>
+<form action="/vehicles/add" method="POST">
+  <div class="form-group">
+    <label for="city">City</label>
+    <input class="form-control" type="text" name="city" id="city" placeholder="In what city is the vehicle registered?">
+  </div>
+  <div class="form-group">
+    <label for="owner_id">Owner ID</label>
+    <input class="form-control" type="text" name="owner_id" id="owner_id" placeholder="What is the vehicle owner's ID?">
+  </div>
+  <div class="form-group">
+    <label for="type">Type</label>
+    <input class="form-control" type="text" name="type" id="type" placeholder="What type of vehicle?">
+  </div>
+  <button class="btn btn-primary">Submit</button>
+</form>
+<hr>
+{% endblock %}

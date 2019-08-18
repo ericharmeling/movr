@@ -1,0 +1,26 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<h1>Rides</h1>
+{% if login_err != null or login_err != '' %}
+<h3>{{ login_err }}</h3>
+<hr>
+{% endif %}
+<div class="alert alert-info" role="alert">
+    Go to the <a href="/vehicles">Vehicles</a> page to start a ride!
+</div>
+<div class="list-group">
+    {% for ride in rides %}
+    <a class="list-group-item list-group-item-action flex-column align-items-start">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">Ride ID: {{ ride.id }}</h5>
+            <small>This ride started at {{ ride.start_time }}.</small>
+          </div>
+        <p class="mb-1">City: {{ ride.city }}</p>
+        <p class="mb-1">Vehicle ID: {{ ride.vehicle_id }}</p>
+        <small>This ride ended at {{ ride.end_time }}.</small>
+    </a>
+    {% endfor %}
+</div>
+<hr>
+{% endblock %}
