@@ -1,21 +1,13 @@
 # MovR
 
-MovR is a fictional ride sharing company. This repo contains links to datasets and a load generator.
-
-
-
-## API
-
-get vehicles: `curl http://localhost:3000/api/boston/vehicles.json`
-
-add vehicle: `curl -d '{"owner_id":"15556084-a515-4f00-8000-000000014586", "type":"scooter", "vehicle_metadata":{"brand": "Kona", "color": "green"},"status":"available","current_location":"home"}' -H "Content-Type: application/json" -X PUT http://localhost:3000/api/vehicles/boston`
-
-add ride_history: `curl -d '{"lat":10, "long": 14}' -H "Content-Type: application/json" -X PUT http://localhost:3000/api/rides/amsterdam/c0000000-0000-4000-8000-0000000b71b0/locations.json`
+MovR is a fictional vehicle-sharing company. This repo contains links to datasets and a load generator.
 
 ## Getting started
 First, [download CockroachDB](https://www.cockroachlabs.com/docs/stable/install-cockroachdb.html) and start a local cluster with `cockroach start --insecure --host localhost --background`
 
 Then create the database `movr` with `cockroach sql --insecure --host localhost -e "create database movr;"`
+
+**Tip**: Use [`cockroach workload init movr`] instead of the docker-dependent python generator
 
 Generating fake data: `docker run -it --rm cockroachdb/movr --url "postgres://root@docker.for.mac.localhost:26257/movr?sslmode=disable" load --num-users 100 --num-rides 100 --num-vehicles 10`
 
@@ -55,9 +47,28 @@ ALTER TABLE users PARTITION BY LIST (city) (PARTITION new_york VALUES IN ('new y
 ALTER TABLE rides PARTITION BY LIST (city) (PARTITION new_york VALUES IN ('new york' ), PARTITION chicago VALUES IN ('chicago' ), PARTITION seattle VALUES IN ('seattle' ));
 ```
 
+## API
+
+get vehicles: `curl http://localhost:3000/api/boston/vehicles.json`
+
+add vehicle: `curl -d '{"owner_id":"15556084-a515-4f00-8000-000000014586", "type":"scooter", "vehicle_metadata":{"brand": "Kona", "color": "green"},"status":"available","current_location":"home"}' -H "Content-Type: application/json" -X PUT http://localhost:3000/api/vehicles/boston`
+
+add ride_history: `curl -d '{"lat":10, "long": 14}' -H "Content-Type: application/json" -X PUT http://localhost:3000/api/rides/amsterdam/c0000000-0000-4000-8000-0000000b71b0/locations.json`
+
+## Web UI
+
+Set `FLASK_APP=web-server.py`, and then use `flask run` to debug the web server.
+
 ## Pre-built datasets
 
+### `cockroach demo movr` and `cockroach workload init movr` **CockroachdB v19.2**
+
+
+
 ### MovR 1M
+
+**Tip**: Use [`cockroach workload init movr`] instead of the docker-dependent python generator
+
 This dataset contains 1M users, 1M rides, and 10k vehicles.
 
 
