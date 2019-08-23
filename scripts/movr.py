@@ -110,7 +110,7 @@ class MovR:
     def get_users(self, city, limit=None):
         def get_users_helper(session, city, limit=None):
             users = session.query(User).filter_by(city=city).limit(limit).all()
-            return list(map(lambda user: {'city': user.city, 'id': user.id}, users))
+            return list(map(lambda user: {'city': user.city, 'id': user.id, 'name': user.name}, users))
         return run_transaction(sessionmaker(bind=self.engine), lambda session: get_users_helper(session, city, limit))
 
     def get_vehicles(self, city, limit=None):
