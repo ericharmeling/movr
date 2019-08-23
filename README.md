@@ -1,19 +1,66 @@
 # MovR
 
-MovR is a fictional vehicle-sharing company. This repo contains links to datasets and a load generator.
+MovR is a fictional vehicle-sharing company. 
+
+This repo contains the following:
+
+- A SQLAlchemy mapping of the [MovR database](https://www.cockroachlabs.com/docs/dev/movr.html)
+- A REST API to the MovR database mapping
+- A web server that hosts an interactive web UI for MovR
+- A fake data generator for the MovR database
+
+For more information about MovR, see the [MovR webpage](https://www.cockroachlabs.com/docs/dev/movr.html).
 
 ## Getting started
-First, [download CockroachDB](https://www.cockroachlabs.com/docs/stable/install-cockroachdb.html) and start a local cluster with `cockroach start --insecure --host localhost --background`
 
-Then create the database `movr` with `cockroach sql --insecure --host localhost -e "create database movr;"`
+### Set up a CockroachDB cluster
 
-**Tip**: Use [`cockroach workload init movr`] instead of the docker-dependent python generator
+1. Download and install the [latest release](https://www.cockroachlabs.com/docs/releases/#testing-releases) of CockroachDB.
+
+2. Run [`cockroach demo movr`](https://www.cockroachlabs.com/docs/dev/cockroach-demo.html) with the `--nodes` and `--demo-locality` tags. This command opens an interactive SQL shell to a temporary, multi-node in-memory cluster with the `movr` database preloaded and set as the [current database](https://www.cockroachlabs.com/docs/dev/sql-name-resolution.html#current-database):
+    ~~~ shell
+    $ cockroach demo movr --nodes=3 --demo-locality=region=us-east1,region=us-central1,region=us-west1
+    ~~~
+
+    **Note**: You can also [start a local cluster](https://www.cockroachlabs.com/docs/dev/start-a-local-cluster.html) and then use [`cockroach workload`](https://www.cockroachlabs.com/docs/dev/cockroach-workload.html#movr-workload) to load the `movr` database and dataset into the running cluster. Then you can open a SQL shell to the cluster with [`cockroach sql`](https://www.cockroachlabs.com/docs/dev/cockroach-sql.html)
+
+### Start the web server
+
+1. Set up your python development environment. 
+
+    **Tip**: `virtualenv` is helpful for managing dependencies in a development environment, which are listed in [`requirements.txt`](/requirements.txt).
+
+    ~~~ shell
+    $ pip install virtualenv
+    $ python -m venv my-env
+    $ source my-env/bin/activate
+    $ pip install -r requirements.txt
+    ~~~
+
+2. Start the web server:
+    
+    ~~~ shell
+    $ python web-server.py
+    ~~~
+    ~~~
+    * Serving Flask app "web-server" (lazy loading)
+    * Environment: development
+    * Debug mode: on
+    * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+    * Restarting with stat
+    * Debugger is active!
+    * Debugger PIN: 
+    ~~~
+3. Direct your browser to http://127.0.0.1:5000/.
+
+## Generating fake data
 
 Generating fake data: `docker run -it --rm cockroachdb/movr --url "postgres://root@docker.for.mac.localhost:26257/movr?sslmode=disable" load --num-users 100 --num-rides 100 --num-vehicles 10`
 
 Generating load for cities: `docker run -it --rm cockroachdb/movr --url "postgres://root@docker.for.mac.localhost:26257/movr?sslmode=disable" --num-threads 10 run --city "new york" --city "boston"`
 
-## Partitioning MovR
+## Partitioning MovR data
+
 MovR can automatically partition data and apply zone configs using the `partition` command.
 Use region-city pairs to map cities to regional partitions and use region-zone pairs to map regional partitions to zones
 `docker run -it --rm cockroachdb/movr --echo-sql --app-name "movr-partition" --url "postgres://root@[ipaddress]/movr?sslmode=disable" partition --region-city-pair us_east:"new york" --region-city-pair central:chicago --region-city-pair us_west:seattle  --region-zone-pair us_east:us-east1 --region-zone-pair central:us-central1 --region-zone-pair us_west:us-west1`
@@ -55,22 +102,10 @@ add vehicle: `curl -d '{"owner_id":"15556084-a515-4f00-8000-000000014586", "type
 
 add ride_history: `curl -d '{"lat":10, "long": 14}' -H "Content-Type: application/json" -X PUT http://localhost:3000/api/rides/amsterdam/c0000000-0000-4000-8000-0000000b71b0/locations.json`
 
-## Web UI
-
-Set `FLASK_APP=web-server.py`, and then use `flask run` to debug the web server.
-
-## Pre-built datasets
-
-### `cockroach demo movr` and `cockroach workload init movr` **CockroachdB v19.2**
-
-
 
 ### MovR 1M
 
-**Tip**: Use [`cockroach workload init movr`] instead of the docker-dependent python generator
-
 This dataset contains 1M users, 1M rides, and 10k vehicles.
-
 
 Import Users
 ```
@@ -97,7 +132,9 @@ CSV DATA (
 'https://s3-us-west-1.amazonaws.com/cockroachdb-movr/datasets/movr-1m/users/n1.10.csv');
 
 ```
+
 Import vehicles
+
 ```
 IMPORT TABLE vehicles (
         id UUID NOT NULL,
@@ -118,6 +155,7 @@ CSV DATA ('https://s3-us-west-1.amazonaws.com/cockroachdb-movr/datasets/movr-1m/
 ```
 
 Import rides
+
 ```
 IMPORT TABLE rides (
         id UUID NOT NULL,
@@ -151,6 +189,7 @@ CSV DATA (
 ```
 
 Setup and validate integrity constraints
+
 ```
 ALTER TABLE vehicles ADD CONSTRAINT fk_city_ref_users FOREIGN KEY (city, owner_id) REFERENCES users (city, id);
 ALTER TABLE rides ADD CONSTRAINT fk_city_ref_users FOREIGN KEY (city, rider_id) REFERENCES users (city, id);
