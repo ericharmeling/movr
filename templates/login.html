@@ -2,11 +2,17 @@
 
 {% block body %}
 <h1>Log in</h1>
-{% if login_err != null or login_err != '' %}
+{% if logged_in %}
 <hr>
-<h3>{{ login_err }}</h3>
+<h3>You are logged in as {{ username }}</h3>
+<form action="/logout" method="POST">
+  <div class="form-group">
+      <input class="form-control" readonly type="hidden" id="logout" name="logout" value="log out">
+  </div>
+  <button class="btn btn-primary">Log out</button>
+</form>
 <hr>
-{% endif %}
+{% else %}
 <form action="/login" method="POST">
   <div class="form-group">
     <label for="username">User Name</label>
@@ -18,4 +24,5 @@
   </div>
   <button class="btn btn-primary">Submit</button>
 </form>
+{% endif %}
 {% endblock %}

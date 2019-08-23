@@ -2,13 +2,13 @@
 
 {% block body %}
 <div>
-    <h1 class="display-4">Welcome {{ user }}!</h1>
+    <h1 class="display-4">Welcome {{ username }}!</h1>
 </div>
 <hr>
   <h4>Welcome to Movr, a vehicle-sharing experience brought to you by <img src="https://d33wubrfki0l68.cloudfront.net/e051c02e4bcafe3450898a73a08eb41549e0c173/7da1e/docs/images/cl_logo_horizontal.svg" width="150" height="150" alt="CRL" class="text-bottom"></h4>
 {% if city not in ('new york', 'boston', 'washington dc', 'san francisco', 'seattle', 'los angeles', 'chicago', 'detroit', 'minneapolis', 'amsterdam', 'paris', 'rome') %}
 <div class="alert alert-warning" role="alert">
-    MovR hasn't gotten to {{ city }} yet!
+    MovR hasn't made it to {{ city }} yet!
 </div>
 {% endif %}
 

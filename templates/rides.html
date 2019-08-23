@@ -2,8 +2,8 @@
 
 {% block body %}
 <h1>Rides</h1>
-{% if login_err != null or login_err != '' %}
-<h3>{{ login_err }}</h3>
+{% if err != null or err != '' %}
+<h3>{{ err }}</h3>
 <hr>
 {% endif %}
 <div class="alert alert-info" role="alert">

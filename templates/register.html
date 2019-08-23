@@ -1,0 +1,29 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<h1>Sign Up</h1>
+{% if err != null or err != '' %}
+<h3>{{ err }}</h3>
+{% endif %}
+<hr>
+<form action="/register" method="POST">
+  <div class="form-group">
+    <label for="city">City</label>
+    <input class="form-control" type="text" name="city" id="city" placeholder="What city do you live in?">
+  </div>
+  <div class="form-group">
+    <label for="name">Name</label>
+    <input class="form-control" type="text" name="name" id="name" placeholder="What's your name?">
+  </div>
+  <div class="form-group">
+    <label for="address">Address</label>
+    <input class="form-control" type="text" name="address" id="address" placeholder="What's your address?">
+  </div>
+  <div class="form-group">
+    <label for="credit_card">Payment Information</label>
+    <input class="form-control" type="credit_card" name="credit_card" id="credit_card" placeholder="Enter your (fake) credit card numnber.">
+  </div>
+  <button class="btn btn-primary">Submit</button>
+</form>
+<hr>
+{% endblock %}
