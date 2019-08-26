@@ -99,7 +99,8 @@ def vehicles():
             if session['logged_in']:
                 try:
                     r = request.form
-                    MovR(conn_string).add_vehicle(city=r['city'], owner_id=r['owner_id'], current_location=r['current_location'], type=r['type'], vehicle_metadata=r['vehicle_metadata'], status='available')
+                    ext = { k: v for k, v in {'Brand':r['brand'], 'Color':r['color']}.items() if v not in (None,'')}
+                    MovR(conn_string).add_vehicle(city=r['city'], owner_id=r['owner_id'], current_location=r['current_location'], type=r['type'], vehicle_metadata=ext, status='available')
                     vehicles = movr.get_vehicles(CITY)
                     return render_template('vehicles.html', vehicles=vehicles)
                 except HTTPError as http_error:
