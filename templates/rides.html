@@ -2,8 +2,13 @@
 
 {% block body %}
 <h1>Rides</h1>
-{% if err != null or err != '' %}
+{% if err not in ('', null) %}
+<div class="alert alert-warning" role="alert">
 <h3>{{ err }}</h3>
+</div>
+{% endif %}
+{% if riding %}
+<h3>You are currently riding a {{ ride_type }}. Your ride ID is {{ ride_id }}. You can only ride one vehicle at a time.</h3> 
 <hr>
 {% endif %}
 <div class="alert alert-info" role="alert">

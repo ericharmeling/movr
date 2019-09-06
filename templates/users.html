@@ -2,9 +2,10 @@
 
 {% block body %}
 <h1>Users</h1>
-{% if err != null or err != '' %}
+{% if err not in ('', null) %}
+<div class="alert alert-warning" role="alert">
 <h3>{{ err }}</h3>
-<hr>
+</div>
 {% endif %}
 <div class="list-group">
     {% for user in users %}
