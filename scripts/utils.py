@@ -1,5 +1,9 @@
-# misc utility functions
+# This file contains utility functions
 from flask_sqlalchemy import SQLAlchemy
+from flask import render_template
+from requests import HTTPError
+from functools import wraps
+
 
 # City-region matcher
 us_east = ('new_york', 'boston', 'washington_dc')
@@ -17,7 +21,31 @@ def get_region(city):
     else:
         return 'europe'
 
+
 # Credential validater
 # TO DO: Actually make a credential validater
 def validate_creds(username, password):
     return True
+
+
+# Post error message
+def post_error(page='home.html', err_message='An error occurred!'):
+    try:
+        return render_template(page, err=err_message)
+    except HTTPError as http_error:
+        print(f'HTTP error: {http_error}\n')
+    except Exception as error:
+        print(f'Error: {error}\n')
+
+
+# Route exception handler decorator
+def try_route(f):
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        try:
+            return f(*args, **kwds)
+        except HTTPError as http_error:
+            print(f'HTTP error: {http_error}\n')
+        except Exception as error:
+            print(f'Error: {error}\n')
+    return wrapper
