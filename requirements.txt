@@ -4,6 +4,7 @@ sqlalchemy-utils
 psycopg2-binary
 flask
 flask_sqlalchemy
+flask_wtf
 wtforms
 geocoder
 requests

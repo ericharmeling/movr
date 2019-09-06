@@ -1,4 +1,5 @@
-from wtforms import Form, StringField, SelectField, validators
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, validators
 
 # Fields
 class CityField(SelectField):
@@ -14,11 +15,11 @@ class UserIdField(StringField):
 
 
 # Forms
-class CredentialForm(Form):
-    username = StringField('Username: ', validators=[validators.required(), validators.Length(min=1, max=30)])
-    password = StringField('Password: ', validators=[validators.required(), validators.Length(min=1, max=30)])
+class CredentialForm(FlaskForm):
+    username = StringField('Username: ', validators=[validators.Length(min=1, max=30)])
+    password = PasswordField('Password: ', validators=[validators.Length(min=1, max=30)])
 
-class VehicleForm(Form):
+class VehicleForm(FlaskForm):
     city = CityField()
     vtype = SelectField(label='Vehicles', choices=[('bike', 'Bike'), ('scooter', 'Scooter'), ('skateboard', 'Skateboard')])
     owner = UserIdField(label='Owner ID: ')
