@@ -1,14 +1,14 @@
 from cockroachdb.sqlalchemy import run_transaction
 from sqlalchemy import create_engine, cast
 from sqlalchemy.orm import sessionmaker
-from scripts.models import Base, User, Vehicle, Ride, VehicleLocationHistory, PromoCode, UserPromoCode
+from movr.models import Base, User, Vehicle, Ride, VehicleLocationHistory, PromoCode, UserPromoCode
 from sqlalchemy.dialects import registry
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 registry.register("cockroachdb", "cockroachdb.sqlalchemy.dialect", "CockroachDBDialect")
 
 #https://docs.sqlalchemy.org/en/13/core/connections.html#registering-new-dialects
 
-from scripts.generators import MovRGenerator
+from movr.generators import MovRGenerator
 
 import datetime, logging
 

@@ -1,13 +1,11 @@
 from flask import Flask, Response, __version__, request, jsonify, render_template, session
-from scripts.movr import MovR
-from index import make_conn_string
+from movr.movr import MovR
 from uuid import UUID
-import requests
 from requests import HTTPError
 import geocoder
-from scripts.utils import get_region, validate_creds, post_error, try_route
-import scripts.forms as forms
-from config import *
+from movr.utils import get_region, validate_creds, post_error, try_route
+import movr.forms as forms
+from config import Config, ProductionConfig, DevConfig
 
 app = Flask(__name__)
 app.config.from_object(DevConfig)
