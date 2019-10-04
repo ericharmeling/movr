@@ -5,7 +5,7 @@ from requests import HTTPError
 import geocoder
 from movr.utils import get_region, validate_creds, post_error, try_route
 import movr.forms as forms
-from config import Config, ProductionConfig, DevConfig
+from config import DevConfig
 
 app = Flask(__name__)
 app.config.from_object(DevConfig)
@@ -79,7 +79,8 @@ def register():
     else:
         r = request.form
         MovR(conn_string).add_user(city=r['city'], name=r['name'], address=r['address'], credit_card_number=r['credit_card'])
-        return render_template('register.html')
+        users = movr.get_users(CITY)
+        return render_template('users.html', users=users, err='')
 
 # Vehicles page
 @app.route('/vehicles', methods=['GET'])
@@ -99,7 +100,7 @@ def vehicles():
             def post_try():
                 r = request.form
                 ext = { k: v for k, v in {'Brand':r['brand'], 'Color':r['color']}.items() if v not in (None,'')}
-                MovR(conn_string).add_vehicle(city=r['city'], owner_id=r['owner_id'], current_location=r['current_location'], type=r['type'], vehicle_metadata=ext, status='available')
+                MovR(conn_string).add_vehicle(city=r['city'].lower(), owner_id=r['owner_id'], current_location=r['current_location'], type=r['type'], vehicle_metadata=ext, status='available')
                 vehicles = movr.get_vehicles(CITY)
                 return render_template('vehicles.html', vehicles=vehicles)
             return post_try()
@@ -115,7 +116,7 @@ def vehicles():
 @app.route('/rides', methods=['GET'])
 def rides_page():
     rides = movr.get_active_rides(CITY)
-    return render_template('rides.html', rides=rides)
+    return render_template('rides.html', rides=reversed(rides))
 
 
 # Start ride route
@@ -129,7 +130,7 @@ def start_ride():
                 MovR(conn_string).start_ride(city=r['city'], rider_id=r['rider_id'], vehicle_id=r['vehicle_id'])
                 session['riding'] = True
                 rides = movr.get_active_rides(CITY)
-                return render_template('rides.html', rides=rides)
+                return render_template('rides.html', rides=reversed(rides))
             return post_try()
         else:
             @try_route
