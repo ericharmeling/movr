@@ -6,7 +6,7 @@ from sqlalchemy.types import DECIMAL
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 import datetime
-from generators import MovRGenerator
+from movr.generators import MovRGenerator
 
 #@todo: add interleaving
 #@todo: restore FKs and "relationship' functionality after this is fixed: https://github.com/cockroachdb/cockroach/issues/36859
