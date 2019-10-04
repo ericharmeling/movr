@@ -2,3 +2,4 @@
 flaskenv/*
 .vscode/*
 Pipfile.lock
+.env

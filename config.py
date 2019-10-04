@@ -16,14 +16,14 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
     SECRET_KEY = os.environ['SECRET_KEY']
-    DB_HOST = os.environ['DB_SERVER']
+    DB_HOST = os.environ['DB_HOST']
     DB_PORT = os.environ['DB_PORT']
     DB_USER = os.environ['DB_USER']
     DATABASE_URI= 'cockroachdb://{}@{}:{}/movr'.format(DB_USER, DB_HOST, DB_PORT)
 
 class DevConfig(Config):
     SECRET_KEY = os.environ['SECRET_KEY']
-    DB_HOST = os.environ['DB_SERVER']
+    DB_HOST = os.environ['DB_HOST']
     DB_PORT = os.environ['DB_PORT']
     DB_USER = os.environ['DB_USER']
     DATABASE_URI= 'cockroachdb://{}@{}:{}/movr'.format(DB_USER, DB_HOST, DB_PORT)
