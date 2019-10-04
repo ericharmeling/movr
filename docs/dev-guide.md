@@ -24,17 +24,14 @@ MovR serves a global user base, so latency on SQL operations can significantly a
 
 ### Setting up a CockroachDB cluster
 
-In production, you want to start a secure CockroachDB nodes on machines located in different areas of the world. For instructions on deploying a geo-distributed, multi-node, secure cluster on multiple cloud platforms, see the [Manual Deployment](https://www.cockroachlabs.com/docs/dev/manual-deployment.html) page of the Cockroach Labs documentation site. 
-
-For the purposes of this tutorial, we use `cockroach demo` with the `--nodes` and `--demo-locality` flags to start up an insecure, virtual multi-node cluster:
+In production, you want to start a secure CockroachDB cluster, with nodes on machines located in different areas of the world. For instructions on deploying a geo-distributed, multi-node, secure cluster on multiple cloud platforms, see the [Manual Deployment](https://www.cockroachlabs.com/docs/dev/manual-deployment.html) page of the Cockroach Labs documentation site. 
+For the purposes of this tutorial, we use the [`cockroach demo`](https://www.cockroachlabs.com/docs/dev/cockroach-demo.html) command with the `--geo-partitioned-replicas` tag to start up an insecure, virtual nine-node cluster with the [Geo-Partitioned Replicas](https://www.cockroachlabs.com/docs/stable/topology-geo-partitioned-replicas.html) topology pattern applied:
 
 ~~~ shell
-$ cockroach demo \
---nodes=9 \
---demo-locality=region=us-east1:region=us-east2:region=us-east3:region=us-central1:region=us-central2:region=us-central3:region=us-west1:region=us-west2:region=us-west3
+$ cockroach demo --geo-partitioned-replicas
 ~~~
 
-This command opens a SQL shell to the virtual cluster, with a `movr` database preloaded. Keep this terminal window open for the duration of the tutorial. The `movr` database, and an associated `movr` workload generator, are built into the CockroachDB binary. We'll map columns and relations from the `movr` database to Python classes in our application, with SQLAlchemy.
+This command also opens a SQL shell to the virtual cluster, with a `movr` database preloaded and set as the [current database](https://www.cockroachlabs.com/docs/dev/sql-name-resolution.html#current-database). Keep this terminal window open for the duration of the tutorial. The `movr` database, and an associated `movr` workload generator, are built into the CockroachDB binary. We'll map columns and relations from the `movr` database to Python classes in our application, with SQLAlchemy.
 
 ### The `movr` database
 
@@ -71,7 +68,7 @@ To get a more detailed look, you can query the tables in the database. For examp
 (1 row)
 ~~~
 
-As we mentioned earlier, after you start the cluster, you need to [partition](https://www.cockroachlabs.com/docs/dev/partitioning.html) some tables and indexes in the database to optimize performance.
+As we mentioned earlier, after you start the cluster, you need to [partition](https://www.cockroachlabs.com/docs/dev/partitioning.html) some tables and indexes in the database to optimize performance. With the `--geo-partitioned-replicas` flag, `cockroach demo` automatically partitions the database indexes according to the [Geo-Partitioned Replicas](https://www.cockroachlabs.com/docs/stable/topology-geo-partitioned-replicas.html) topology pattern.
 
 
 ## Setting up a virtual environment
@@ -114,6 +111,16 @@ Then run the following command to install the packages listed in the `Pipfile`:
 $ pipenv install
 ~~~
 
+You will likely have some system environment variables that you want to set for the virtual environment. or example, to connect to a SQL database (including CockroachDB!) from a client, you need a SQL connection string, with includes the host, port, user, and database. You can store all of this information in environment variables. Pipenv automatically sets any variables defined in a `.env` file as environment variables in a Pipenv virtual environment. So, create a file named `.env`, and define those connection string variables.
+
+For example:
+
+~~~
+DB_HOST = 'localhost'
+DB_PORT = 26257
+DB_USER = 'root'
+~~~
+
 Then activate the virtual environment:
 
 ~~~ shell
@@ -121,6 +128,12 @@ $ pipenv shell
 ~~~
 
 You can exit the shell subprocess at any time with a simple `exit` command.
+
+~~~ shell
+$ exit
+~~~
+
+
 
 ## Setting up the Python project
 
@@ -237,3 +250,39 @@ We've added `__tablename__`, to hold the stored name of the table in the databas
 ## Building a web application with Flask
 
 By now you should have an idea of what components we need to connect to a running database, map our database objects to objects in Python, and then interact with the database transactionally. Let's actually build out the web application that can do this for us.
+
+Flask offers some pretty robust configuration options, and you can take several different approaches to setting those options. Let's use configuration classes to define different configurations that we want to use (and reuse when making new ones!). 
+
+Make a file named `config.py`, and then define the configuration classes as simple data-storing `object`s. We can use the `os` library to pull security-sensitive information (like the `SECRET_KEY` Flask variable) into these.
+
+~~~ python
+# This file defines classes for flask configuration
+import os
+
+class Config(object):
+    DEBUG = True
+    TESTING = True
+    ENV = 'development'
+    SECRET_KEY = os.urandom(16)
+    DB_HOST = 'localhost'
+    DB_PORT = 26257
+    DB_USER = 'root'
+    DATABASE_URI= 'cockroachdb://{}@{}:{}/movr'.format(DB_USER, DB_HOST, DB_PORT)
+
+class ProductionConfig(Config):
+    ENV = 'production'
+    DEBUG = False
+    TESTING = False
+    SECRET_KEY = os.environ['SECRET_KEY']
+    DB_HOST = os.environ['DB_SERVER']
+    DB_PORT = os.environ['DB_PORT']
+    DB_USER = os.environ['DB_USER']
+    DATABASE_URI= 'cockroachdb://{}@{}:{}/movr'.format(DB_USER, DB_HOST, DB_PORT)
+
+class DevConfig(Config):
+    SECRET_KEY = os.environ['SECRET_KEY']
+    DB_HOST = os.environ['DB_SERVER']
+    DB_PORT = os.environ['DB_PORT']
+    DB_USER = os.environ['DB_USER']
+    DATABASE_URI= 'cockroachdb://{}@{}:{}/movr'.format(DB_USER, DB_HOST, DB_PORT)
+~~~
