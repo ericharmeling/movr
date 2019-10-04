@@ -23,7 +23,11 @@
           </div>
         <p class="mb-1">City: {{ ride.city }}</p>
         <p class="mb-1">Vehicle ID: {{ ride.vehicle_id }}</p>
+        {% if ride.end_time == None %}
+        <div class="alert alert-success" role="alert">This ride is still active!</div>
+        {% else %}
         <small>This ride ended at {{ ride.end_time }}.</small>
+        {% endif %}
     </a>
     {% endfor %}
 </div>
