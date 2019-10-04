@@ -155,7 +155,9 @@ Object Relational Mappers (ORM's) map classes to tables, class instances to rows
 
 ### Connecting to CockroachDB with SQLAlchemy
 
-Let's start by using SQLAlchemy to create an interface that connects our application to our running CockroachDB cluster. SQLAlchemy's `Engine` class establishes this connection. If you haven't already, create a file named `movr.py`. This file defines the `MovR` class that handles connections to CockroachDB.
+Let's start by using SQLAlchemy to create an interface that connects the application to the running CockroachDB cluster. 
+
+If you haven't already, create a file named `movr.py`. This file defines the `MovR` class, which handles connections to CockroachDB using SQLAlchemy's `Engine` and `Session` classes. At the top of this file, import `create_engine` and `sessionmaker` from the `sqlalchemy` library. To handle requests to the server as transactions to the database, we then define `__enter__` and `__exit__` functions, in addition to the common `__init__` constructor.
 
 ~~~ python
 from sqlalchemy import create_engine
@@ -184,13 +186,15 @@ class MovR:
         self.session = sessionmaker(bind=self.engine)()
 ~~~
 
-For now, we've only imported `create_engine` and `sessionmaker`, as these are the two functions required to construct the database connection in our application. 
+When called, the constructor creates an instance of the `Engine` class using an input connection string that specifies the database dialect and connection arguments. The constructor then creates a `Session` object that binds to the active `Engine` object. The `__enter__` function simply returns the object itself, so, after the class is initialized, `MovR` attributes and methods can access the session. The `__exit__` function closes any active engine sessions.
 
-### Mapping
+For now, we've only imported `create_engine` and `sessionmaker`, as these are the two functions required to construct the database connection in our application. After we map the tables in the `movr` database to classes, we can import and use those in order to create methods that map to transactions.
+
+### Mapping tables to classes
 
 By now you should be familiar with your CockroachDB cluster, the `movr` database, and each of the tables in the database.
 
-Create a file called `models.py`. This file contains the class definitions of tables in the database. Recall that each instance of a table class represents a row in the table.
+If you haven't done so already, create a file named `models.py`. This file contains the class definitions that map to tables in the `movr` database. Import `declarative_base`, SQLALchemy's base table class. You also need to import some other classes that represent database objects (like columns and indexes), data types, and constraints.
 
 ~~~ python
 from sqlalchemy.ext.declarative import declarative_base
@@ -199,14 +203,15 @@ from sqlalchemy import Column, Index, String, DateTime, Integer, Float, \
 from sqlalchemy.types import DECIMAL
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
-import datetime
-from generators import MovRGenerator
-
 Base = declarative_base()
+~~~
 
+You can now start defining the table classes from `Base`. Recall that each instance of a table class represents a row in the table, so let's name our table classes as if they were individual rows of their parent table, since that's what they'll become when called. Let's start with `User`:
+
+~~~ python
 class User(Base):
     __tablename__ = 'users'
-    id = Column(UUID, default=MovRGenerator.generate_uuid)
+    id = Column(UUID)
     city = Column(String)
     name = Column(String)
     address = Column(String)
@@ -217,7 +222,11 @@ class User(Base):
         return "<User(city='%s', id='%s', name='%s')>" % (self.city, self.id, self.name)
 ~~~
 
-### APIs
+We've added `__tablename__`, to hold the stored name of the table in the database.
+
+
+### Defining APIs as transactions
+
 
 #### Querying
 
