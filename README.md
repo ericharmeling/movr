@@ -22,7 +22,7 @@ For more information about MovR, see the [MovR webpage](https://www.cockroachlab
     $ cockroach demo movr --nodes=3 --demo-locality=region=us-east1,region=us-central1,region=us-west1
     ~~~
 
-    **Note**: You can also [start a local cluster](https://www.cockroachlabs.com/docs/dev/start-a-local-cluster.html) and then use [`cockroach workload`](https://www.cockroachlabs.com/docs/dev/cockroach-workload.html#movr-workload) to load the `movr` database and dataset into the running cluster. Then you can open a SQL shell to the cluster with [`cockroach sql`](https://www.cockroachlabs.com/docs/dev/cockroach-sql.html)
+    **Note**: You can also [start a local cluster](https://www.cockroachlabs.com/docs/dev/start-a-local-cluster.html) and then use [`cockroach workload`](https://www.cockroachlabs.com/docs/dev/cockroach-workload.html#movr-workload) to load the `movr` database and dataset into the running cluster. Then you can open a SQL shell to the cluster with [`cockroach sql`](https://www.cockroachlabs.com/docs/dev/cockroach-sql.html).
 
 ### Start the web server
 
