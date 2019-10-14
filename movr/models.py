@@ -15,7 +15,7 @@ Base = declarative_base()
 
 class User(Base):
     __tablename__ = 'users'
-    id = Column(UUID, default=generate_uuid)
+    id = Column(UUID, default=MovRGenerator.generate_uuid)
     city = Column(String)
     name = Column(String)
     address = Column(String)
