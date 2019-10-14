@@ -164,11 +164,11 @@ movr
 
 ## Using the SQLAlchemy ORM
 
-Object Relational Mappers (ORM's) map classes to tables, class instances to rows, and class methods to transactions on the rows of a table. The `sqlalchemy` package includes some base classes and methods that you can use to connect to your database's server from a Python application, then map tables in that database to Python classes.
+Object Relational Mappers (ORM's) map classes to tables, class instances to rows, and class methods to transactions on the rows of a table. The `sqlalchemy` package includes some base classes and methods that you can use to connect to your database's server from a Python application, then map tables in that database to Python classes. In this tutorial, we'll use SQLAlchemy's [Declarative](https://docs.sqlalchemy.org/en/13/orm/extensions/declarative/) extension, which is built on the `mapper()` and `Table` functions.
 
 ### Connecting to CockroachDB with SQLAlchemy
 
-Let's start by using SQLAlchemy to create an interface that connects the application to the running CockroachDB cluster. 
+Let's start by using SQLAlchemy to create an interface that connects the application to the running CockroachDB cluster.
 
 If you haven't already, create a file named `movr.py`. This file defines the `MovR` class, which handles connections to CockroachDB using SQLAlchemy's `Engine` and `Session` classes. At the top of this file, import `create_engine` and `sessionmaker` from the `sqlalchemy` library. To handle requests to the server as transactions to the database, we then define `__enter__` and `__exit__` functions, in addition to the common `__init__` constructor.
 
@@ -207,7 +207,7 @@ For now, we've only imported `create_engine` and `sessionmaker`, as these are th
 
 By now you should be familiar with your CockroachDB cluster, the `movr` database, and each of the tables in the database.
 
-If you haven't done so already, create a file named `models.py`. This file contains the class definitions that map to tables in the `movr` database. Import `declarative_base`, SQLALchemy's base table class. You also need to import some other classes that represent database objects (like columns and indexes), data types, and constraints.
+If you haven't done so already, create a file named `models.py`. This file contains the class definitions that map to tables in the `movr` database. Import `declarative_base`, SQLALchemy's base table class, built on the Declarative extension. You also need to import some other standard SQLAlchemy classes that represent database objects (like columns and indexes), data types, and constraints.
 
 ~~~ python
 from sqlalchemy.ext.declarative import declarative_base
@@ -224,32 +224,40 @@ You can now start defining the table classes from `Base`. Recall that each insta
 ~~~ python
 class User(Base):
     __tablename__ = 'users'
-    id = Column(UUID)
-    city = Column(String)
+    id = Column(UUID, primary_key=True)
+    city = Column(String, primary_key=True)
     name = Column(String)
     address = Column(String)
     credit_card = Column(String)
-    PrimaryKeyConstraint(city, id)
 
     def __repr__(self):
         return "<User(city='%s', id='%s', name='%s')>" % (self.city, self.id, self.name)
 ~~~
 
-We've added `__tablename__`, to hold the stored name of the table in the database.
+We've defined the `User` class to contain the following attributes: 
 
+- `__tablename__`, which holds the stored name of the table in the database. SQLAlchemy requires this attribute for all classes that map to tables.
+- `id`, `city`, `name`, `address`, and `credit_card`, all of which are stored as `Column` objects that represent columns in a database table. The constructor for each `Column` takes the column data type as its argument. To help define column objects, SQLAlchemy also includes some classes that correspond to SQL data types. For the columns in this table, we just use `UUID` and `String`.
+
+After you define the `User` table class, you can go ahead and define classes for the rest of the tables in the `movr` database.
 
 ### Defining APIs as transactions
 
+After you create a class for each table in the database, you can start defining some functions that bundle together common SQL operations as transactions. These transaction functions will make up the API resources that the front-end will interface with.
 
 #### Querying
 
+Let's start with some basic read transactions. A very common query that a client might want to run is to read the `vehicles` table.
+
 #### Inserting
 
-### Transactions
+Let's move on to some the slightly more advanced write transactions. A good place to start would be writes to the `rides` table.
 
 ## Building a web application with Flask
 
 By now you should have an idea of what components we need to connect to a running database, map our database objects to objects in Python, and then interact with the database transactionally. Let's actually build out the web application that can do this for us.
+
+### Configuring the server environment
 
 Flask offers some pretty robust configuration options, and you can take several different approaches to setting those options. Let's use configuration classes to define different configurations that we want to use (and reuse when making new ones!). 
 
@@ -286,3 +294,7 @@ class DevConfig(Config):
     DB_USER = os.environ['DB_USER']
     DATABASE_URI= 'cockroachdb://{}@{}:{}/movr'.format(DB_USER, DB_HOST, DB_PORT)
 ~~~
+
+### Routing
+
+
