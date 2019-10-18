@@ -1,26 +1,26 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-<h1>Vehicles</h1>
+<p class="h1 text-center">Vehicles</p>
+<hr>
 {% if err not in ('', null) %}
 <div class="alert alert-warning" role="alert">
 <h4>{{ err }}</h4>
 </div>
 {% endif %}
-<hr>
 <div class="list-group">
     {% for vehicle in vehicles %}
-    <a class="list-group-item list-group-item-action flex-column align-items-start">
-        <div class="d-flex w-100 justify-content-between">
-            <h5 class="text-capitalize">{{ vehicle.type }}</h5>
-        </div>
+    <a class="list-group-item">
+      <p class="h5 text-capitalize">{{ vehicle.type }}</p>
       <p class="mb-1">Vehicle ID: {{ vehicle.id }}</p>
-      <p class="mb-1">This {{ vehicle.type }} is located in <bf class="text-capitalize">{{ vehicle.city }}</bf>.</p>
+      <p class="mb-1">Location: <bf class="text-capitalize">{{ vehicle.city }}</bf></p>
       {% for i in vehicle.ext %}
       <p class="mb-1"><bf class="text-capitalize">{{ i }}</bf>: <bf class="text-capitalize">{{ vehicle.ext[i] }}</bf></p>
       {% endfor %}
       {% if vehicle.status == 'available' %}
-      <p class="mb-1">The vehicle is currently <font color="green">available</font>. You can ride this vehicle!</p>
+      <div class="d-flex w-100 justify-content-between">
+          <p class="alert alert-success" role="alert">Available</p>
+      </div>
       <form action="/rides/start" method="POST">
         <div class="form-group">
           <input class="form-control" type="text" name="rider_id" id="rider_id" placeholder="What is your user ID?">
@@ -31,42 +31,18 @@
         <div class="form-group">
             <input class="form-control" readonly type="hidden" id="city" name="city" value="{{ vehicle.city }}">
         </div>
-        <button class="btn btn-primary">Start</button>
+        <button class="btn btn-primary">Start ride</button>
       </form>
       {% else %}
-      <p class="mb-1">The vehicle is currently <font color="red">unavailable</font>.</p>
+      <div class="d-flex w-100 justify-content-between">
+          <p class="alert alert-warning" role="alert">Unavailable</p>
+      </div>
       {% endif %}
     </a>
     {% endfor %}
 </div>
 <hr>
-<h3>Add a vehicle</h3>
-<form action="/vehicles/add" method="POST">
-  <div class="form-group">
-    <label for="city">City</label>
-    <input class="form-control" type="text" name="city" id="city" placeholder="In what city is the vehicle registered?">
-  </div>
-  <div class="form-group">
-    <label for="current_location">Current Location</label>
-    <input class="form-control" type="text" name="current_location" id="current_location" placeholder="Where is the vehicle currently located?">
-  </div>
-  <div class="form-group">
-    <label for="owner_id">Owner ID</label>
-    <input class="form-control" type="text" name="owner_id" id="owner_id" placeholder="What is the vehicle owner's ID?">
-  </div>
-  <div class="form-group">
-    <label for="type">Type</label>
-    <input class="form-control" type="text" name="type" id="type" placeholder="What type of vehicle?">
-  </div>
-  <div class="form-group">
-    <label for="color">Color</label>
-    <input class="form-control" type="text" name="color" id="color" placeholder="What color?">
-  </div>
-  <div class="form-group">
-    <label for="brand">Brand</label>
-    <input class="form-control" type="text" name="brand" id="brand" placeholder="What brand?">
-  </div>
-  <button class="btn btn-primary">Add</button>
-</form>
-<hr>
+<div class="d-flex w-100 justify-content-between">
+    <p class="alert alert-info" role="alert">Go to the <a href="/vehicles/add">Add a vehicle</a> add a new vehicle!</p>
+</div>
 {% endblock %}

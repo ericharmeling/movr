@@ -1,14 +1,14 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-<h1>Log in</h1>
+<p class="h1 text-center">Log in</p>
+<hr>
 {% if err not in ('', null) %}
 <div class="alert alert-warning" role="alert">
 <h4>{{ err }}</h4>
 </div>
 {% endif %}
 {% if logged_in %}
-<hr>
 <h3>You are logged in as {{ username }}</h3>
 <form action="/logout" method="POST">
   <div class="form-group">
@@ -16,7 +16,6 @@
   </div>
   <button class="btn btn-primary">Log out</button>
 </form>
-<hr>
 {% else %}
 <form action="/login" method="POST">
   <div class="form-group">

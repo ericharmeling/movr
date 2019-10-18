@@ -1,7 +1,8 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-<h1>Rides</h1>
+<p class="h1 text-center">Rides</p>
+<hr>
 {% if err not in ('', null) %}
 <div class="alert alert-warning" role="alert">
 <h3>{{ err }}</h3>
@@ -9,27 +10,35 @@
 {% endif %}
 {% if riding %}
 <h3>You are currently riding a {{ ride_type }}. Your ride ID is {{ ride_id }}. You can only ride one vehicle at a time.</h3> 
-<hr>
-{% endif %}
-<div class="alert alert-info" role="alert">
-    Go to the <a href="/vehicles">Vehicles</a> page to start a ride!
+{% else %}
+<div class="d-flex w-100 justify-content-between">
+    <p class="alert alert-info" role="alert">Go to the <a href="/vehicles">Vehicles</a> page to start a ride!</p>
 </div>
+{% endif %}
 <div class="list-group">
     {% for ride in rides %}
     <a class="list-group-item list-group-item-action flex-column align-items-start">
         <div class="d-flex w-100 justify-content-between">
             <h5 class="mb-1">Ride ID: {{ ride.id }}</h5>
-            <small>This ride started at {{ ride.start_time }}.</small>
-          </div>
-        <p class="mb-1">City: {{ ride.city }}</p>
-        <p class="mb-1">Vehicle ID: {{ ride.vehicle_id }}</p>
+        </div>
+        <div class="d-flex w-100 justify-content-between">
+            <p class="mb-1">City: <bf class="text-capitalize">{{ ride.city }}</bf></p>
+            <small>This ride started {{ ride.start_time }}.</small>
+        </div>
+        <div class="d-flex w-100 justify-content-between">
+            <p class="mb-1">Vehicle ID: {{ ride.vehicle_id }}</p>
+            {% if ride.end_time != None %}
+            <small>This ride ended {{ ride.end_time }}.</small>
+            {% endif %}
+        </div>
+        <div class="d-flex w-100 justify-content-between">
         {% if ride.end_time == None %}
-        <div class="alert alert-success" role="alert">This ride is still active!</div>
+        <p class="alert alert-success" role="alert">Active</p>
         {% else %}
-        <small>This ride ended at {{ ride.end_time }}.</small>
+        <p class="alert alert-warning" role="alert">Inactive</p>
         {% endif %}
+        </div>
     </a>
     {% endfor %}
 </div>
-<hr>
 {% endblock %}

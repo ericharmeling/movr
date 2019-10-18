@@ -1,7 +1,8 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-<h1>Users</h1>
+<p class="h1 text-center">Users</p>
+<hr>
 {% if err not in ('', null) %}
 <div class="alert alert-warning" role="alert">
 <h3>{{ err }}</h3>
@@ -18,5 +19,4 @@
     </a>
     {% endfor %}
 </div>
-<hr>
 {% endblock %}

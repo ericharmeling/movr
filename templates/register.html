@@ -1,13 +1,13 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-<h1>Sign Up</h1>
+<p class="h1 text-center">Sign Up</p>
+<hr>
 {% if err not in ('', null) %}
 <div class="alert alert-warning" role="alert">
 <h4>{{ err }}</h4>
 </div>
 {% endif %}
-<hr>
 <form action="/register" method="POST">
   <div class="form-group">
     <label for="city">City</label>
@@ -27,5 +27,4 @@
   </div>
   <button class="btn btn-primary">Submit</button>
 </form>
-<hr>
 {% endblock %}

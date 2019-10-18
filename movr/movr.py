@@ -1,16 +1,13 @@
 from cockroachdb.sqlalchemy import run_transaction
 from sqlalchemy import create_engine, cast
 from sqlalchemy.orm import sessionmaker
-from movr.models import Base, User, Vehicle, Ride, VehicleLocationHistory, PromoCode, UserPromoCode
 from sqlalchemy.dialects import registry
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 registry.register("cockroachdb", "cockroachdb.sqlalchemy.dialect", "CockroachDBDialect")
 
-#https://docs.sqlalchemy.org/en/13/core/connections.html#registering-new-dialects
-
-from movr.generators import MovRGenerator
-
-import datetime, logging
+from movr.models import Base, User, Vehicle, Ride, VehicleLocationHistory, PromoCode, UserPromoCode
+from movr.callbacks import start_ride_callback, end_ride_callback, update_ride_location_callback, add_user_callback, add_vehicle_callback, get_users_callback, get_vehicles_callback, get_rides_callback, get_promo_codes_callback, add_promo_code_callback, apply_promo_code_callback
+import logging
 
 class MovR:
 
@@ -21,10 +18,7 @@ class MovR:
         self.session.close()
 
     def __init__(self, conn_string, init_tables = False, echo = False):
-
-
         self.engine = create_engine(conn_string, convert_unicode=True, echo=echo)
-
 
         if init_tables:
             logging.info("initializing tables")
@@ -34,131 +28,49 @@ class MovR:
 
         self.session = sessionmaker(bind=self.engine)()
 
-    ##################
-    # MAIN MOVR API
-    #################
 
     def start_ride(self, city, rider_id, vehicle_id):
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: start_ride_callback(session, city, rider_id, vehicle_id))
 
-        def start_ride_helper(session, city, rider_id, vehicle_id):
-            v = session.query(Vehicle).filter_by(city=city, id=vehicle_id).first()
-
-            # get promo codes associated with this user's account
-            upcs = session.query(UserPromoCode).filter_by(city=city, user_id=rider_id).all()
-
-            # determine which codes are valid
-            for upc in upcs:
-                promo_code = session.query(PromoCode).filter_by(code = upc.code).first()
-                if promo_code and promo_code.expiration_time > datetime.datetime.now():
-                    upc.usage_count+=1;
-                    #@todo: do something with the code
-
-            r = Ride(city=city, vehicle_city=city, id=MovRGenerator.generate_uuid(),
-                     rider_id=rider_id, vehicle_id=vehicle_id,
-                     start_address=v.current_location)
-            session.add(r)
-            v.status = "in_use"
-            return {'city': r.city, 'id': r.id}
-
-        return run_transaction(sessionmaker(bind=self.engine),
-                               lambda session: start_ride_helper(session, city, rider_id, vehicle_id))
 
     def end_ride(self, city, ride_id):
-        def end_ride_helper(session, city, ride_id):
-            ride = session.query(Ride).filter_by(city=city, id=ride_id).first()
-            v = session.query(Vehicle).filter_by(city=city, id=ride.vehicle_id).first()
-            ride.end_address = v.current_location
-            ride.revenue = MovRGenerator.generate_revenue()
-            ride.end_time = datetime.datetime.now()
-            v.status = "available"
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: end_ride_callback(session, city, ride_id))
 
-        run_transaction(sessionmaker(bind=self.engine), lambda session: end_ride_helper(session, city, ride_id))
 
     def update_ride_location(self, city, ride_id, lat, long):
-        def update_ride_location_helper(session, city, ride_id, lat, long):
-            h = VehicleLocationHistory(city = city, ride_id = ride_id, lat = lat, long = long)
-            session.add(h)
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: update_ride_location_callback(session, city, ride_id, lat, long))
 
-        run_transaction(sessionmaker(bind=self.engine),
-                        lambda session: update_ride_location_helper(session, city, ride_id, lat, long))
 
     def add_user(self, city, name, address, credit_card_number):
-        def add_user_helper(session, city, name, address, credit_card_number):
-            u = User(city=city, id=MovRGenerator.generate_uuid(), name=name,
-                     address=address, credit_card=credit_card_number)
-            session.add(u)
-            return {'city': u.city, 'id': u.id}
-        return run_transaction(sessionmaker(bind=self.engine),
-                               lambda session: add_user_helper(session, city, name, address, credit_card_number))
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: add_user_callback(session, city, name, address, credit_card_number))
+
 
     def add_vehicle(self, city, owner_id, current_location, type, vehicle_metadata, status):
-        def add_vehicle_helper(session, city, owner_id, current_location, type, vehicle_metadata, status):
-            vehicle_type = type
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: add_vehicle_callback(session, city, owner_id, current_location, type, vehicle_metadata, status))
 
-            vehicle = Vehicle(id=MovRGenerator.generate_uuid(), type=vehicle_type,
-                              city=city, owner_id=owner_id, current_location = current_location,
-                              status=status,
-                              ext=vehicle_metadata)
-
-            session.add(vehicle)
-            return {'city': vehicle.city, 'id': vehicle.id}
-        return run_transaction(sessionmaker(bind=self.engine),
-                               lambda session: add_vehicle_helper(session,
-                                                                  city, owner_id, current_location, type,
-                                                                  vehicle_metadata, status))
 
     def get_users(self, city, limit=None):
-        def get_users_helper(session, city, limit=None):
-            users = session.query(User).filter_by(city=city).limit(limit).all()
-            return list(map(lambda user: {'city': user.city, 'id': user.id, 'name': user.name}, users))
-        return run_transaction(sessionmaker(bind=self.engine), lambda session: get_users_helper(session, city, limit))
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: get_users_callback(session, city, limit))
+
 
     def get_vehicles(self, city, limit=None):
-        def get_vehicles_helper(session, city, limit=None):
-            vehicles = session.query(Vehicle).filter_by(city=city).limit(limit).all()
-            return list(map(lambda vehicle: {'city': vehicle.city, 'id': vehicle.id, 'type': vehicle.type, 'status': vehicle.status, 'ext': vehicle.ext}, vehicles))
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: get_vehicles_callback(session, city, limit))
 
-        return run_transaction(sessionmaker(bind=self.engine), lambda session: get_vehicles_helper(session, city, limit))
 
-    def get_active_rides(self, city, limit=None):
-        def get_active_rides_helper(session, city, limit=None):
-            rides = session.query(Ride).filter_by(city=city).limit(limit).all()
-            return list(map(lambda ride: {'city': ride.city, 'id': ride.id, 'vehicle_id': ride.vehicle_id, 'start_time': ride.start_time, 'end_time': ride.end_time}, rides))
+    def get_rides(self, city, limit=None):
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: get_rides_callback(session, city, limit))
 
-        return run_transaction(sessionmaker(bind=self.engine),
-                               lambda session: get_active_rides_helper(session, city, limit))
 
     def get_promo_codes(self, limit=None):
-        def get_promo_codes_helper(session, limit=None):
-            pcs = session.query(PromoCode).limit(limit).all()
-            return list(map(lambda pc: pc.code, pcs))
-
-        return run_transaction(sessionmaker(bind=self.engine), lambda session: get_promo_codes_helper(session, limit))
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: get_promo_codes_callback(session, limit))
 
 
     def create_promo_code(self, code, description, expiration_time, rules):
-        def add_promo_code_helper(session, code, description, expiration_time, rules):
-            pc = PromoCode(code = code, description = description, expiration_time = expiration_time, rules = rules)
-            session.add(pc)
-            return pc.code
-
-        return run_transaction(sessionmaker(bind=self.engine),
-                               lambda session: add_promo_code_helper(session, code, description, expiration_time, rules))
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: add_promo_code_callback(session, code, description, expiration_time, rules))
 
 
     def apply_promo_code(self, user_city, user_id, promo_code):
-        def apply_promo_code_helper(session, user_city, user_id, code):
-            pc = session.query(PromoCode).filter_by(code=code).one_or_none()
-            if pc:
-                # see if it has already been applied
-                upc = session.query(UserPromoCode).\
-                    filter_by(city = user_city, user_id = user_id, code = code).one_or_none()
-                if not upc:
-                    upc = UserPromoCode(city = user_city, user_id = user_id, code = code)
-                    session.add(upc)
-
-        run_transaction(sessionmaker(bind=self.engine),
-                               lambda session: apply_promo_code_helper(session, user_city, user_id, promo_code))
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: apply_promo_code_callback(session, user_city, user_id, promo_code))
 
 
 

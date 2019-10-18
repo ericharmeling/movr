@@ -92,30 +92,33 @@ def vehicles_page():
 # Add vehicles route
 # TO-DO : Create custom fields for metadata entry
 # TO-DO : Add geolocation support
-@app.route('/vehicles/add', methods=['POST'])
+@app.route('/vehicles/add', methods=['GET','POST'])
 def vehicles():
-    try:
-        if session['logged_in']:
-            @try_route
-            def post_try():
-                r = request.form
-                ext = { k: v for k, v in {'Brand':r['brand'], 'Color':r['color']}.items() if v not in (None,'')}
-                MovR(conn_string).add_vehicle(city=r['city'].lower(), owner_id=r['owner_id'], current_location=r['current_location'], type=r['type'], vehicle_metadata=ext, status='available')
+    if request.method == 'GET':
+        return render_template('vehicles-add.html')
+    else:
+        try:
+            if session['logged_in']:
+                @try_route
+                def post_try():
+                    r = request.form
+                    ext = { k: v for k, v in {'Brand':r['brand'], 'Color':r['color']}.items() if v not in (None,'')}
+                    MovR(conn_string).add_vehicle(city=r['city'].lower(), owner_id=r['owner_id'], current_location=r['current_location'], type=r['type'], vehicle_metadata=ext, status='available')
+                    vehicles = movr.get_vehicles(CITY)
+                    return render_template('vehicles.html', vehicles=vehicles)
+                return post_try()
+            else:
                 vehicles = movr.get_vehicles(CITY)
-                return render_template('vehicles.html', vehicles=vehicles)
-            return post_try()
-        else:
+                return render_template('vehicles.html', vehicles=vehicles, err='You need to log in to add vehicles!')
+        except KeyError as key_error:
             vehicles = movr.get_vehicles(CITY)
             return render_template('vehicles.html', vehicles=vehicles, err='You need to log in to add vehicles!')
-    except KeyError as key_error:
-        vehicles = movr.get_vehicles(CITY)
-        return render_template('vehicles.html', vehicles=vehicles, err='You need to log in to add vehicles!')
 
 # Rides page
 # TO DO: This should be visible to administrators only... You need to implement some kind of 'account type'.
 @app.route('/rides', methods=['GET'])
 def rides_page():
-    rides = movr.get_active_rides(CITY)
+    rides = movr.get_rides(CITY)
     return render_template('rides.html', rides=reversed(rides))
 
 
@@ -129,7 +132,7 @@ def start_ride():
             def post_try():
                 MovR(conn_string).start_ride(city=r['city'], rider_id=r['rider_id'], vehicle_id=r['vehicle_id'])
                 session['riding'] = True
-                rides = movr.get_active_rides(CITY)
+                rides = movr.get_rides(CITY)
                 return render_template('rides.html', rides=reversed(rides))
             return post_try()
         else:
