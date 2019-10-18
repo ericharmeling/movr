@@ -1,5 +1,4 @@
 from movr.models import Vehicle, UserPromoCode, PromoCode, Ride, VehicleLocationHistory, User
-from movr.generators import MovRGenerator
 import datetime
 import uuid
 import random
@@ -27,13 +26,13 @@ def update_ride_location_callback(session, city, ride_id, lat, long):
 
 
 def add_user_callback(session, city, name, address, credit_card_number):
-    u = User(city=city, id=MovRGenerator.generate_uuid(), name=name, address=address, credit_card=credit_card_number)
+    u = User(city=city, id=str(uuid.uuid4()), name=name, address=address, credit_card=credit_card_number)
     session.add(u)
     return {'city': u.city, 'id': u.id}
 
 def add_vehicle_callback(session, city, owner_id, current_location, type, vehicle_metadata, status):
     vehicle_type = type
-    vehicle = Vehicle(id=MovRGenerator.generate_uuid(), type=vehicle_type, city=city, owner_id=owner_id, current_location = current_location, status=status, ext=vehicle_metadata)
+    vehicle = Vehicle(id=str(uuid.uuid4()), type=vehicle_type, city=city, owner_id=owner_id, current_location = current_location, status=status, ext=vehicle_metadata)
     session.add(vehicle)
     return {'city': vehicle.city, 'id': vehicle.id}
 
@@ -45,7 +44,7 @@ def get_users_callback(session, city, limit=None):
 
 def get_vehicles_callback(session, city, limit=None):
     vehicles = session.query(Vehicle).filter_by(city=city).limit(limit).all()
-    return list(map(lambda vehicle: {'city': vehicle.city, 'id': vehicle.id, 'type': vehicle.type, 'status': vehicle.status, 'ext': vehicle.ext}, vehicles))
+    return list(map(lambda vehicle: {'city': vehicle.city, 'id': vehicle.id, 'type': vehicle.type, 'current_location': vehicle.current_location + ', ' + vehicle.city, 'status': vehicle.status, 'ext': vehicle.ext}, vehicles))
 
 
 def get_rides_callback(session, city, limit=None):
