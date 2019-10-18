@@ -13,7 +13,7 @@
     <a class="list-group-item">
       <p class="h5 text-capitalize">{{ vehicle.type }}</p>
       <p class="mb-1">Vehicle ID: {{ vehicle.id }}</p>
-      <p class="mb-1">Location: <bf class="text-capitalize">{{ vehicle.city }}</bf></p>
+      <p class="mb-1">Location: <bf class="text-capitalize">{{ vehicle.current_location }}</bf></p>
       {% for i in vehicle.ext %}
       <p class="mb-1"><bf class="text-capitalize">{{ i }}</bf>: <bf class="text-capitalize">{{ vehicle.ext[i] }}</bf></p>
       {% endfor %}
@@ -43,6 +43,6 @@
 </div>
 <hr>
 <div class="d-flex w-100 justify-content-between">
-    <p class="alert alert-info" role="alert">Go to the <a href="/vehicles/add">Add a vehicle</a> add a new vehicle!</p>
+    <p class="alert alert-info" role="alert"><a href="/vehicles/add">Add a new vehicle</a></p>
 </div>
 {% endblock %}

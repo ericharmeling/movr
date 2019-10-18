@@ -12,10 +12,10 @@
     {% for user in users %}
     <a class="list-group-item list-group-item-action flex-column align-items-start">
         <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">{{ user.name }}</h5>
+            <p class="h5 mb-1">{{ user.name }}</p>
           </div>
-        <p class="mb-1"><bf class="text-capitalize">{{ user.name }}</bf> is registered in <bf class="text-capitalize">{{ user.city }}</bf></p>
-        <small>User ID: {{ user.id }}.</small>
+        <p class="mb-1">City: <bf class="text-capitalize">{{ user.city }}</bf></p>
+        <p class="mb-1">User ID: {{ user.id }}</p>
     </a>
     {% endfor %}
 </div>
