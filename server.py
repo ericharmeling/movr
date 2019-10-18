@@ -78,7 +78,7 @@ def register():
         return render_template('register.html')
     else:
         r = request.form
-        MovR(conn_string).add_user(city=r['city'], name=r['name'], address=r['address'], credit_card_number=r['credit_card'])
+        MovR(conn_string).add_user(city=r['city'].lower(), name=r['name'], address=r['address'], credit_card_number=r['credit_card'])
         users = movr.get_users(CITY)
         return render_template('users.html', users=users, err='')
 
@@ -154,6 +154,7 @@ def end_ride():
         MovR(conn_string).end_ride(city=r['city'], vehicle_id=r['vehicle_id'])
         return render_template('vehicles.html', vehicles=vehicles, err='')
     return post_try()
+
 # Users page
 # TO DO: This should be visible to administrators only... You need to implement some kind of 'account type'.
 @app.route('/users', methods=['GET'])
