@@ -1,33 +1,9 @@
 # This file contains utility functions
-from flask_sqlalchemy import SQLAlchemy
 from flask import render_template
 from requests import HTTPError
 from functools import wraps
 import psycopg2
-
-
-# City-region matcher
-us_east = ('new_york', 'boston', 'washington_dc')
-us_west = ('san_francisco', 'seattle', 'los_angeles')
-us_mid = ('chicago', 'detroit', 'minneapolis')
-europe = ('amsterdam', 'paris', 'rome')
-
-def get_region(city):
-    if city in us_east:
-        return 'us_east'
-    elif city in us_west:
-        return 'us_west'
-    elif city in us_mid:
-        return 'us-mid'
-    else:
-        return 'europe'
-
-
-# Credential validater
-# TO DO: Actually make a credential validater
-def validate_creds(username, password):
-    return True
-
+from movr.callbacks import get_credentials_callback
 
 # Post error message
 def post_error(page='home.html', err_message='An error occurred!', *args, **kwds):
@@ -58,3 +34,14 @@ def try_route(f):
             print(message)
             return post_error(err_message=message)
     return wrapper
+
+
+def validate_creds(username, password):
+    try:
+        uc = get_credentials_callback(username=username)
+        if password == uc.password:
+            return True
+        else:
+            return False
+    except Exception:
+        return False

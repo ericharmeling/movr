@@ -1,22 +1,22 @@
 from cockroachdb.sqlalchemy import run_transaction
-from sqlalchemy import create_engine, cast
+from sqlalchemy import create_engine, cast, MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects import registry
 registry.register("cockroachdb", "cockroachdb.sqlalchemy.dialect", "CockroachDBDialect")
 
 from movr.models import Base, User, Vehicle, Ride, VehicleLocationHistory, PromoCode, UserPromoCode
-from movr.callbacks import start_ride_callback, end_ride_callback, update_ride_location_callback, add_user_callback, add_vehicle_callback, get_users_callback, get_vehicles_callback, get_rides_callback, get_promo_codes_callback, add_promo_code_callback, apply_promo_code_callback
+from movr.callbacks import start_ride_callback, end_ride_callback, update_ride_location_callback, add_user_callback, add_vehicle_callback, get_users_callback, get_vehicles_callback, get_rides_callback, get_promo_codes_callback, add_promo_code_callback, apply_promo_code_callback, register_user_callback
 import logging
 
 class MovR:
-    def __init__(self, conn_string, init_tables = False, echo = False):
+    def __init__(self, conn_string, init_tables = True, echo = False):
         self.engine = create_engine(conn_string, convert_unicode=True, echo=echo)
         
         if init_tables:
             logging.info("Initializing tables")
-            Base.metadata.drop_all(bind=self.engine)
-            Base.metadata.create_all(bind=self.engine)
-            logging.debug("Tables dropped and created")
+            metadata=MetaData()
+            metadata.create_all(bind=self.engine)
+            logging.debug("Tables created")
 
         self.session = sessionmaker(bind=self.engine)()
 
@@ -42,6 +42,8 @@ class MovR:
     def add_user(self, city, name, address, credit_card_number):
         return run_transaction(sessionmaker(bind=self.engine), lambda session: add_user_callback(session, city, name, address, credit_card_number))
 
+    def register_user(self, city, name, address, credit_card_number, username, password):
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: register_user_callback(session, city, name, address, credit_card_number, username, password))
 
     def add_vehicle(self, city, owner_id, current_location, type, vehicle_metadata, status):
         return run_transaction(sessionmaker(bind=self.engine), lambda session: add_vehicle_callback(session, city, owner_id, current_location, type, vehicle_metadata, status))

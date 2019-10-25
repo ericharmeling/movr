@@ -1,4 +1,4 @@
-from movr.models import Vehicle, UserPromoCode, PromoCode, Ride, VehicleLocationHistory, User
+from movr.models import Vehicle, UserPromoCode, PromoCode, Ride, VehicleLocationHistory, User, UserCredentials
 import datetime
 import uuid
 import random
@@ -25,8 +25,8 @@ def update_ride_location_callback(session, city, ride_id, lat, long):
     session.add(h)
 
 
-def add_user_callback(session, city, name, address, credit_card_number):
-    u = User(city=city, id=str(uuid.uuid4()), name=name, address=address, credit_card=credit_card_number)
+def add_user_callback(session, city, name, address, credit_card_number, id=str(uuid.uuid4())):
+    u = User(city=city, id=id, name=name, address=address, credit_card=credit_card_number)
     session.add(u)
     return {'city': u.city, 'id': u.id}
 
@@ -66,9 +66,18 @@ def add_promo_code_callback(session, code, description, expiration_time, rules):
 def apply_promo_code_callback(session, user_city, user_id, code):
     pc = session.query(PromoCode).filter_by(code=code).one_or_none()
     if pc:
-        # see if it has already been applied
         upc = session.query(UserPromoCode).\
             filter_by(city = user_city, user_id = user_id, code = code).one_or_none()
         if not upc:
             upc = UserPromoCode(city = user_city, user_id = user_id, code = code)
             session.add(upc)
+
+def register_user_callback(session, city, name, address, credit_card_number, username, password):
+    id=str(uuid.uuid4())
+    add_user_callback(session, city, name, address, credit_card_number, id=id)
+    uc = UserCredentials(user_city=city, user_id=id, username=username, password=password)
+    return {'username': uc.username, 'password': uc.password}
+
+def get_credentials_callback(session, username):
+    uc = session.query(UserCredentials).filter_by(username=username)
+    return {'username': uc.username, 'password': uc.password}

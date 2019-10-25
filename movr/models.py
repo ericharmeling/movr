@@ -1,10 +1,8 @@
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Index, String, DateTime, Integer, Float, \
-    PrimaryKeyConstraint, ForeignKeyConstraint, CheckConstraint
+from sqlalchemy import Column, Index, String, DateTime, Integer, Float, ForeignKey, CheckConstraint
 from sqlalchemy.types import DECIMAL
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-
 import uuid
 import datetime
 
@@ -28,30 +26,26 @@ class User(Base):
 class Ride(Base):
     __tablename__ = 'rides'
     id = Column(UUID, default=str(uuid.uuid4()), primary_key=True)
-    city = Column(String, primary_key=True)
-    vehicle_city = Column(String, CheckConstraint('vehicle_city=city')) #@todo: annoying workaround for https://github.com/cockroachdb/cockroach/issues/23580
-    rider_id = Column(UUID)
-    vehicle_id = Column(UUID)
+    city = Column(String, ForeignKey('users.city'), primary_key=True) #FK requires an index or it fails silently:  https://github.com/cockroachdb/cockroach/issues/22253
+    vehicle_city = Column(String, CheckConstraint('vehicle_city=city'), ForeignKey('vehicles.city')) #@todo: annoying workaround for https://github.com/cockroachdb/cockroach/issues/23580
+    rider_id = Column(UUID, ForeignKey('users.id'))
+    vehicle_id = Column(UUID, ForeignKey('vehicles.id'))
     start_address = Column(String)
     end_address = Column(String)
     start_time = Column(DateTime, default=datetime.datetime.now)
     end_time = Column(DateTime)
     revenue = Column(DECIMAL(10,2))
-    __table_args__ = (ForeignKeyConstraint([city, rider_id], ["users.city", "users.id"]),) #this requires an index or it fails silently:  https://github.com/cockroachdb/cockroach/issues/22253
-    __table_args__ = (ForeignKeyConstraint([vehicle_city, vehicle_id], ["vehicles.city", "vehicles.id"]),)
-
 
     def __repr__(self):
         return "<Ride(city='%s', id='%s', rider_id='%s', vehicle_id='%s')>" % (self.city, self.id, self.rider_id, self.vehicle_id)
 
 class VehicleLocationHistory(Base):
     __tablename__ = 'vehicle_location_histories'
-    city = Column(String, primary_key=True)
-    ride_id = Column(UUID, primary_key=True)
+    city = Column(String, ForeignKey('rides.city'), primary_key=True)
+    ride_id = Column(UUID, ForeignKey('rides.id'), primary_key=True)
     timestamp = Column(DateTime, default=datetime.datetime.now, primary_key=True)
     lat = Column(Float)
     long = Column(Float)
-    __table_args__ = (ForeignKeyConstraint([city, ride_id], ["rides.city", "rides.id"]),) #@todo: cut until FK performance improves in 19.2
 
     def __repr__(self):
         return "<VehicleLocationHistory(city='%s', ride_id='%s', timestamp='%s', lat='%s', long='%s')>" % \
@@ -60,15 +54,14 @@ class VehicleLocationHistory(Base):
 class Vehicle(Base):
     __tablename__ = 'vehicles'
     id = Column(UUID, default=str(uuid.uuid4()), primary_key=True)
-    city = Column(String, primary_key=True)
+    city = Column(String, ForeignKey('users.city'), primary_key=True)
     type = Column(String)
-    owner_id = Column(UUID)
+    owner_id = Column(UUID, ForeignKey('users.id'))
     creation_time = Column(DateTime, default=datetime.datetime.now)
     status = Column(String)
     current_location = Column(String)
     ext = Column(JSONB)
-    __table_args__ = (ForeignKeyConstraint([city, owner_id], ["users.city", "users.id"]),)
-    
+
     def __repr__(self):
         return "<Vehicle(city='%s', id='%s', type='%s', status='%s', ext='%s')>" % (self.city, self.id, self.type, self.status, self.ext)
 
@@ -87,15 +80,23 @@ class PromoCode(Base):
 
 class UserPromoCode(Base):
     __tablename__ = 'user_promo_codes'
-    city = Column(String, primary_key=True)
-    user_id = Column(UUID, primary_key=True)
+    city = Column(String, ForeignKey('users.city'), primary_key=True)
+    user_id = Column(UUID, ForeignKey('users.user_id'), primary_key=True)
     code = Column(String, primary_key=True)
     timestamp = Column(DateTime, default=datetime.datetime.now)
     usage_count = Column(Integer, default=0)
 
-    __table_args__ = (ForeignKeyConstraint([city, user_id], ["users.city",
-                                                              "users.id"]),)
-
     def __repr__(self):
         return "<UserPromoCode(city='%s', user_id='%s', code='%s', timestamp='%s')>" % \
                (self.user_city, self.user_id, self.code, self.timestamp)
+
+class UserCredentials(Base):
+    __tablename__ = 'user_credentials'
+    user_city = Column(String, ForeignKey('users.city'), primary_key=True)
+    user_id = Column(UUID, ForeignKey('users.id'), primary_key=True)
+    username = Column(String, unique=True)
+    password = Column(String)
+
+    def __repr__(self):
+        return "<UserCredentials(city='%s', user_id='%s', username='%s', password='%s')>" % \
+               (self.user_city, self.user_id, self.username, self.password)

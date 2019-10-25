@@ -1,43 +1,31 @@
 from flask import Flask, Response, __version__, request, jsonify, render_template, session
 from movr.movr import MovR
-from uuid import UUID
-from requests import HTTPError
-import geocoder
-from movr.utils import get_region, validate_creds, post_error, try_route
-import movr.forms as forms
+from movr.location import Location
+from requests import HTTPError, get
+from movr.utils import validate_creds, post_error, try_route
 from config import DevConfig
 
 app = Flask(__name__)
 app.config.from_object(DevConfig)
 
-# Set vars
+# Connect to the database
 conn_string = app.config.get('DATABASE_URI')
-if app.config.get('DEBUG'):
-    REGION = 'us_east'
-    CITY = 'new york'
-    CURRENT_LOCATION = '23rd Street, New York, New York'
-else:
-    g = geocoder.ip('me')
-    CURRENT_LOCATION = g.json['address']
-    CITY = g.city
-    REGION = get_region(CITY)
-
-# Connect to database
 movr = MovR(conn_string)
-
 
 # ROUTES
 # Home page
 @app.route('/', methods=['GET'])
 @app.route('/home', methods=['GET'])
 def home_page(username=''):
+    session['location'] = Location().__dict__
+    print(session['location'])
     try:
-        return render_template('home.html', username=session['username'], city=CITY)
+        return render_template('home.html', username=session['username'], city=session['location']['city'])
     except KeyError as key_error:
-        return render_template('home.html', city=CITY)
+        return render_template('home.html', city=session['location']['city'])
+
 
 # Login page 
-# TO-DO : Implement validate_creds()
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
@@ -63,6 +51,7 @@ def login():
                 return post_error('login.html', 'Invalid credentials! Username or password not in database. Make sure you are registered with MovR.')
         return post_try()
 
+
 # Logout route
 @app.route('/logout', methods=['POST'])
 def logout():
@@ -70,28 +59,29 @@ def logout():
     session['username'] = ''
     return render_template('login.html', logged_in=session['logged_in'])
 
+
 # Registration page
-# TO-DO : Add geolocation support
 @app.route('/register', methods=['GET','POST'])
 def register():
     if request.method == 'GET':
         return render_template('register.html')
     else:
         r = request.form
-        MovR(conn_string).add_user(city=r['city'].lower(), name=r['name'], address=r['address'], credit_card_number=r['credit_card'])
-        users = movr.get_users(CITY)
+        MovR(conn_string).register_user(city=r['city'].lower(), name=r['name'], address=r['address'], credit_card_number=r['credit_card'], username=r['username'], password=r['password'])
+        session['logged_in'] = True
+        session['username'] = r['username']
+        users = movr.get_users(session['location']['city'])
         return render_template('users.html', users=users, err='')
+
 
 # Vehicles page
 @app.route('/vehicles', methods=['GET'])
 def vehicles_page():
-    vehicles = movr.get_vehicles(CITY)
+    vehicles = movr.get_vehicles(session['location']['city'])
     return render_template('vehicles.html', vehicles=vehicles, err='')
 
 
 # Add vehicles route
-# TO-DO : Create custom fields for metadata entry
-# TO-DO : Add geolocation support
 @app.route('/vehicles/add', methods=['GET','POST'])
 def vehicles():
     if request.method == 'GET':
@@ -104,21 +94,21 @@ def vehicles():
                     r = request.form
                     ext = { k: v for k, v in {'Brand':r['brand'], 'Color':r['color']}.items() if v not in (None,'')}
                     MovR(conn_string).add_vehicle(city=r['city'].lower(), owner_id=r['owner_id'], current_location=r['current_location'], type=r['type'], vehicle_metadata=ext, status='available')
-                    vehicles = movr.get_vehicles(CITY)
+                    vehicles = movr.get_vehicles(session['location']['city'])
                     return render_template('vehicles.html', vehicles=vehicles)
                 return post_try()
             else:
-                vehicles = movr.get_vehicles(CITY)
+                vehicles = movr.get_vehicles(session['location']['city'])
                 return render_template('vehicles.html', vehicles=vehicles, err='You need to log in to add vehicles!')
         except KeyError as key_error:
-            vehicles = movr.get_vehicles(CITY)
+            vehicles = movr.get_vehicles(session['location']['city'])
             return render_template('vehicles.html', vehicles=vehicles, err='You need to log in to add vehicles!')
 
+
 # Rides page
-# TO DO: This should be visible to administrators only... You need to implement some kind of 'account type'.
 @app.route('/rides', methods=['GET'])
 def rides_page():
-    rides = movr.get_rides(CITY)
+    rides = movr.get_rides(session['location']['city'])
     return render_template('rides.html', rides=reversed(rides))
 
 
@@ -132,13 +122,13 @@ def start_ride():
             def post_try():
                 MovR(conn_string).start_ride(city=r['city'], rider_id=r['rider_id'], vehicle_id=r['vehicle_id'])
                 session['riding'] = True
-                rides = movr.get_rides(CITY)
+                rides = movr.get_rides(session['location']['city'])
                 return render_template('rides.html', rides=reversed(rides))
             return post_try()
         else:
             @try_route
             def error_page():
-                vehicles = movr.get_vehicles(CITY)
+                vehicles = movr.get_vehicles(session['location']['city'])
                 return render_template('vehicles.html', vehicles=vehicles, err='You need to log in start a ride!')
             return error_page()
     except KeyError as key_error:
@@ -155,12 +145,13 @@ def end_ride():
         return render_template('vehicles.html', vehicles=vehicles, err='')
     return post_try()
 
+
 # Users page
-# TO DO: This should be visible to administrators only... You need to implement some kind of 'account type'.
 @app.route('/users', methods=['GET'])
 def users_page():
-    users = movr.get_users(CITY)
-    return render_template('users.html', users=users, err='')
+    users = movr.get_users(session['location']['city'])
+    return render_template('users.html', users=users, err='', logged_in=session['logged_in'])
+
 
 if __name__ == '__main__':
     app.run()
