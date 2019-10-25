@@ -5,7 +5,12 @@
 <hr>
 {% if err not in ('', null) %}
 <div class="alert alert-warning" role="alert">
-<h3>{{ err }}</h3>
+<p class="h5">{{ err }}</p>
+</div>
+{% endif %}
+{% if not logged_in %}
+<div class="d-flex w-100 justify-content-between">
+    <p class="alert alert-info" role="alert">Go to the <a href="/login">Log In</a> page to log in. <br> If you aren't registered yet, go to the <a href="/register">Sign Up</a> page to sign up.</p>
 </div>
 {% endif %}
 <div class="list-group">

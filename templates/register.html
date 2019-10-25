@@ -5,7 +5,7 @@
 <hr>
 {% if err not in ('', null) %}
 <div class="alert alert-warning" role="alert">
-<h4>{{ err }}</h4>
+<p class="h5">{{ err }}</p>
 </div>
 {% endif %}
 <form action="/register" method="POST">
@@ -23,7 +23,15 @@
   </div>
   <div class="form-group">
     <label for="credit_card">Payment Information</label>
-    <input class="form-control" type="credit_card" name="credit_card" id="credit_card" placeholder="Enter your (fake) credit card numnber.">
+    <input class="form-control" type="credit_card" name="credit_card" id="credit_card" placeholder="Enter your (fake) credit card number.">
+  </div>
+  <div class="form-group">
+    <label for="username">Username</label>
+    <input class="form-control" type="username" name="username" id="username" placeholder="Enter a username.">
+  </div>
+  <div class="form-group">
+    <label for="credit_card">Password</label>
+    <input class="form-control" type="password" name="password" id="password" placeholder="Enter a password.">
   </div>
   <button class="btn btn-primary">Submit</button>
 </form>
