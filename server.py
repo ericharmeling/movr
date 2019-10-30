@@ -2,7 +2,7 @@ from flask import Flask, Response, __version__, request, jsonify, render_templat
 from movr.movr import MovR
 from movr.location import Location
 from requests import HTTPError, get
-from movr.utils import validate_creds, post_error, try_route
+from movr.web_utils import validate_creds, render_or_error, try_route
 from config import DevConfig
 
 app = Flask(__name__)
@@ -48,7 +48,7 @@ def login():
                 session['username'] = username
                 return render_template('login.html', logged_in=session['logged_in'], username=session['username'])
             else:
-                return post_error('login.html', 'Invalid credentials! Username or password not in database. Make sure you are registered with MovR.')
+                return render_or_error('login.html', 'Invalid credentials! Username or password not in database. Make sure you are registered with MovR.')
         return post_try()
 
 

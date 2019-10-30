@@ -6,7 +6,7 @@ import psycopg2
 from movr.callbacks import get_credentials_callback
 
 # Post error message
-def post_error(page='home.html', err_message='An error occurred!', *args, **kwds):
+def render_or_error(page='home.html', err_message='An error occurred!', *args, **kwds):
     try:
         return render_template(page, err=err_message, *args, **kwds)
     except HTTPError as http_error:
@@ -24,15 +24,15 @@ def try_route(f):
         except HTTPError as http_error:
             message = f'HTTP error: {http_error}\n'
             print(message)
-            return post_error(err_message=message)
+            return render_or_error(err_message=message)
         except psycopg2.Error as sql_error:
             message = f'SQL Error: {sql_error}\n'
             print(message)
-            return post_error(err_message=message)
+            return render_or_error(err_message=message)
         except Exception as error:
             message = f'Error: {error}\n'
             print(message)
-            return post_error(err_message=message)
+            return render_or_error(err_message=message)
     return wrapper
 
 

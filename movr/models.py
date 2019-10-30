@@ -1,4 +1,3 @@
-
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Index, String, DateTime, Integer, Float, ForeignKey, CheckConstraint
 from sqlalchemy.types import DECIMAL

@@ -5,7 +5,7 @@ from sqlalchemy.dialects import registry
 registry.register("cockroachdb", "cockroachdb.sqlalchemy.dialect", "CockroachDBDialect")
 
 from movr.models import Base, User, Vehicle, Ride, VehicleLocationHistory, PromoCode, UserPromoCode
-from movr.callbacks import start_ride_callback, end_ride_callback, update_ride_location_callback, add_user_callback, add_vehicle_callback, get_users_callback, get_vehicles_callback, get_rides_callback, get_promo_codes_callback, add_promo_code_callback, apply_promo_code_callback, register_user_callback
+from movr.txn_callbacks import start_ride_callback, end_ride_callback, update_ride_location_callback, add_user_callback, add_vehicle_callback, get_users_callback, get_vehicles_callback, get_rides_callback, get_promo_codes_callback, add_promo_code_callback, apply_promo_code_callback, register_user_callback
 import logging
 
 class MovR:
