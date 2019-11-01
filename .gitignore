@@ -2,4 +2,5 @@
 flaskenv/*
 .vscode/*
 Pipfile.lock
-.env
+*.env
+.idea/vcs.xm

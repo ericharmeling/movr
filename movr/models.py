@@ -1,32 +1,36 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Index, String, DateTime, Integer, Float, ForeignKey, CheckConstraint
-from sqlalchemy.types import DECIMAL
+from sqlalchemy import Column, Index, String, DateTime, Integer, Float, ForeignKey, CheckConstraint, MetaData
+from sqlalchemy.types import DECIMAL, BLOB
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 import uuid
 import datetime
-
-#@todo: add interleaving
-#@todo: restore FKs and "relationship' functionality after this is fixed: https://github.com/cockroachdb/cockroach/issues/36859
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
 
 Base = declarative_base()
 
-class User(Base):
+class User(Base, UserMixin):
     __tablename__ = 'users'
     id = Column(UUID, default=str(uuid.uuid4()), primary_key=True)
     city = Column(String, primary_key=True)
-    name = Column(String)
+    first_name = Column(String)
+    last_name = Column(String)
     address = Column(String)
-    credit_card = Column(String)
+    username = Column(String, unique=True)
+    password_hash = Column(String)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
 
     def __repr__(self):
-        return "<User(city='%s', id='%s', name='%s')>" % (self.city, self.id, self.name)
+        return "<User(city='%s', id='%s', name='%s')>" % (self.city, self.id, self.first_name + ' ' + self.last_name)
+        
 
-#@todo: sqlalchemy fails silently if compound fks are in the wrong order.
 class Ride(Base):
     __tablename__ = 'rides'
     id = Column(UUID, default=str(uuid.uuid4()), primary_key=True)
-    city = Column(String, ForeignKey('users.city'), primary_key=True) #FK requires an index or it fails silently:  https://github.com/cockroachdb/cockroach/issues/22253
-    vehicle_city = Column(String, CheckConstraint('vehicle_city=city'), ForeignKey('vehicles.city')) #@todo: annoying workaround for https://github.com/cockroachdb/cockroach/issues/23580
+    city = Column(String, primary_key=True)
+    vehicle_city = Column(String, CheckConstraint('vehicle_city=city'))
     rider_id = Column(UUID, ForeignKey('users.id'))
     vehicle_id = Column(UUID, ForeignKey('vehicles.id'))
     start_address = Column(String)
@@ -40,7 +44,7 @@ class Ride(Base):
 
 class VehicleLocationHistory(Base):
     __tablename__ = 'vehicle_location_histories'
-    city = Column(String, ForeignKey('rides.city'), primary_key=True)
+    city = Column(String, primary_key=True)
     ride_id = Column(UUID, ForeignKey('rides.id'), primary_key=True)
     timestamp = Column(DateTime, default=datetime.datetime.now, primary_key=True)
     lat = Column(Float)
@@ -53,7 +57,7 @@ class VehicleLocationHistory(Base):
 class Vehicle(Base):
     __tablename__ = 'vehicles'
     id = Column(UUID, default=str(uuid.uuid4()), primary_key=True)
-    city = Column(String, ForeignKey('users.city'), primary_key=True)
+    city = Column(String, primary_key=True)
     type = Column(String)
     owner_id = Column(UUID, ForeignKey('users.id'))
     creation_time = Column(DateTime, default=datetime.datetime.now)
@@ -79,8 +83,8 @@ class PromoCode(Base):
 
 class UserPromoCode(Base):
     __tablename__ = 'user_promo_codes'
-    city = Column(String, ForeignKey('users.city'), primary_key=True)
-    user_id = Column(UUID, ForeignKey('users.user_id'), primary_key=True)
+    city = Column(String, primary_key=True)
+    user_id = Column(UUID, ForeignKey('users.id'), primary_key=True)
     code = Column(String, primary_key=True)
     timestamp = Column(DateTime, default=datetime.datetime.now)
     usage_count = Column(Integer, default=0)
@@ -89,13 +93,3 @@ class UserPromoCode(Base):
         return "<UserPromoCode(city='%s', user_id='%s', code='%s', timestamp='%s')>" % \
                (self.user_city, self.user_id, self.code, self.timestamp)
 
-class UserCredentials(Base):
-    __tablename__ = 'user_credentials'
-    user_city = Column(String, ForeignKey('users.city'), primary_key=True)
-    user_id = Column(UUID, ForeignKey('users.id'), primary_key=True)
-    username = Column(String, unique=True)
-    password = Column(String)
-
-    def __repr__(self):
-        return "<UserCredentials(city='%s', user_id='%s', username='%s', password='%s')>" % \
-               (self.user_city, self.user_id, self.username, self.password)

@@ -1,17 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>MovR</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-</head>
-<body>
+{% extends 'bootstrap/base.html' %}
 
-{% include '_nav.html' %}
-<div class="container justify-content-center">
-    {% block body %}{% endblock %}
-</div>
+{% block title%}MovR{% endblock %}
 
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-
-</body>
+{% block body %}
+    {% block navbar %}
+        {% include '_nav.html' %}
+    {% endblock %}
+    {% block content %}
+    {% if title %}
+    <h1 class="text-center">{{ title }}</h1>
+    <hr>
+    {% endif %}
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for message in messages %}
+                <div class="alert alert-warning" role="alert">{{ message }}</div>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        {% endwith %}
+        {% block app_content %}
+        {% endblock %}
+    {% endblock %}
+{% endblock %}

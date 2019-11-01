@@ -1,9 +1,9 @@
-# This file contains utility functions
+# This file contains utility functions for the MovR Flask app
 from flask import render_template
 from requests import HTTPError
 from functools import wraps
 import psycopg2
-from movr.callbacks import get_credentials_callback
+from movr.transactions import get_user_txn
 
 # Post error message
 def render_or_error(page='home.html', err_message='An error occurred!', *args, **kwds):
@@ -38,10 +38,24 @@ def try_route(f):
 
 def validate_creds(username, password):
     try:
-        uc = get_credentials_callback(username=username)
+        uc = get_user_txn(username=username)
         if password == uc.password:
             return True
         else:
             return False
     except Exception:
         return False
+
+
+def get_region(city):
+    city = city.lower()
+    if city in ('new york', 'boston', 'washington dc'):
+        return 'us_east'
+    elif city in ('san francisco', 'seattle', 'los angeles'):
+        return 'us_west'
+    elif city in ('chicago', 'detroit', 'minneapolis'):
+        return 'us-mid'
+    elif city in ('amsterdam', 'paris', 'rome'):
+        return 'europe'
+    else:
+        return 'unknown'
