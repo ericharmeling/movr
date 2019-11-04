@@ -42,8 +42,8 @@ class MovR:
         return run_transaction(sessionmaker(bind=self.engine), lambda session: add_user_txn(session, city, first_name, last_name, address, username, password))
 
 
-    def add_vehicle(self, city, owner_id, current_location, type, vehicle_metadata, status):
-        return run_transaction(sessionmaker(bind=self.engine), lambda session: add_vehicle_txn(session, city, owner_id, current_location, type, vehicle_metadata, status))
+    def add_vehicle(self, city, owner_id, current_location, type, color, brand, status):
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: add_vehicle_txn(session, city, owner_id, current_location, type, color, brand, status))
 
 
     def get_users(self, city, limit=None):

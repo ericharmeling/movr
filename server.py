@@ -3,7 +3,7 @@ from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from werkzeug.security import check_password_hash
 from movr.movr import MovR
-from web.forms import CredentialForm, RegisterForm
+from web.forms import CredentialForm, RegisterForm, VehicleForm
 from web.utils import validate_creds, render_or_error, try_route, get_region
 from web.config import DevConfig
 from requests import HTTPError
@@ -13,11 +13,11 @@ app = Flask(__name__)
 app.config.from_object(DevConfig)
 bootstrap = Bootstrap(app)
 login = LoginManager(app)
+conn_string = app.config.get('DATABASE_URI')
+movr = MovR(conn_string)
 @login.user_loader
 def load_user(user_id):
     return movr.get_user(user_id=user_id)
-conn_string = app.config.get('DATABASE_URI')
-movr = MovR(conn_string)
 
 # ROUTES
 # Home page
@@ -81,40 +81,31 @@ def register():
 # Vehicles page
 @login_required
 @app.route('/vehicles', methods=['GET'])
-def vehicles_page():
+def vehicles():
     vehicles = movr.get_vehicles(current_user.city)
-    return render_template('vehicles.html', title='Vehicles')
+    return render_template('vehicles.html', title='Vehicles', vehicles=vehicles)
 
 
 # Add vehicles route
 @login_required
 @app.route('/vehicles/add', methods=['GET','POST'])
-def vehicles():
-    if request.method == 'GET':
-        return render_template('vehicles-add.html')
-    else:
+def add_vehicle():
+    form = VehicleForm()
+    if form.validate_on_submit():
         try:
-            if session['logged_in']:
-                @try_route
-                def post_try():
-                    r = request.form
-                    ext = { k: v for k, v in {'Brand':r['brand'], 'Color':r['color']}.items() if v not in (None,'')}
-                    movr.add_vehicle(city=r['city'].lower(), owner_id=r['owner_id'], current_location=r['current_location'], type=r['type'], vehicle_metadata=ext, status='available')
-                    vehicles = movr.get_vehicles(session['location']['city'])
-                    return render_template('vehicles.html', vehicles=vehicles)
-                return post_try()
-            else:
-                vehicles = movr.get_vehicles(session['location']['city'])
-                return render_template('vehicles.html', vehicles=vehicles, err='You need to log in to add vehicles!')
-        except KeyError as key_error:
-            vehicles = movr.get_vehicles(session['location']['city'])
-            return render_template('vehicles.html', vehicles=vehicles, err='You need to log in to add vehicles!')
+            movr.add_vehicle(city=form.city.data, owner_id=current_user.id, current_location=form.location.data, type=form.type.data, color=form.color.data, brand=form.brand.data, status='available')
+            flash('Vehicle added!')
+            return redirect(url_for('vehicles'))
+        except Exception as error:
+            flash('Error: %s' % error)
+            return redirect(url_for('vehicles'))
+    return render_template('vehicles-add.html', title='Add a vehicle', form=form)
 
 
 # Rides page
 @login_required
 @app.route('/rides', methods=['GET'])
-def rides_page():
+def rides():
     rides = movr.get_rides(session['location']['city'])
     return render_template('rides.html', rides=reversed(rides))
 
@@ -130,7 +121,7 @@ def start_ride():
             def post_try():
                 movr.start_ride(city=r['city'], rider_id=r['rider_id'], vehicle_id=r['vehicle_id'])
                 session['riding'] = True
-                rides = movr.get_rides(session['location']['city'])
+                rides = movr.get_rides(current_user.city)
                 return render_template('rides.html', rides=reversed(rides))
             return post_try()
         else:
@@ -158,7 +149,7 @@ def end_ride():
 # Users page
 @login_required
 @app.route('/users', methods=['GET'])
-def users_page():
+def users():
     if current_user.is_authenticated:
         users = movr.get_users(current_user.city)
         return render_template('users.html', title='Users', users=users)

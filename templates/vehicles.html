@@ -4,22 +4,21 @@
 <div class="list-group">
     {% for vehicle in vehicles %}
     <a class="list-group-item">
-      <p class="h5 text-capitalize">{{ vehicle.type }}</p>
-      <p class="mb-1">Vehicle ID: {{ vehicle.id }}</p>
-      <p class="mb-1">Location: <bf class="text-capitalize">{{ vehicle.current_location }}</bf></p>
-      {% for i in vehicle.ext %}
-      <p class="mb-1"><bf class="text-capitalize">{{ i }}</bf>: <bf class="text-capitalize">{{ vehicle.ext[i] }}</bf></p>
-      {% endfor %}
+      <p class="text-center text-capitalize">{{ vehicle.type }}</p>
+      <p class="mb-1 text-center">Vehicle ID: {{ vehicle.id }}</p>
+      <p class="mb-1 text-center">Location: <bf class="text-capitalize">{{ vehicle.current_location }}</bf></p>
+      <p class="mb-1 text-center">Color: <bf class="text-capitalize">{{ vehicle.color }}</bf></p>
+      <p class="mb-1 text-center">Brand: <bf class="text-capitalize">{{ vehicle.brand }}</bf></p>
       {% if vehicle.status == 'available' %}
       <div class="d-flex w-100 justify-content-between">
           <p class="alert alert-success" role="alert">Available</p>
       </div>
       <form action="/rides/start" method="POST">
         <div class="form-group">
-          <input class="form-control" type="text" name="rider_id" id="rider_id" placeholder="What is your user ID?">
+            <input class="form-control" readonly type="hidden" id="vehicle_id" name="vehicle_id" value="{{ vehicle.id }}">
         </div>
         <div class="form-group">
-            <input class="form-control" readonly type="hidden" id="vehicle_id" name="vehicle_id" value="{{ vehicle.id }}">
+            <input class="form-control" readonly type="hidden" id="rider_id" name="rider_id" value="{{ current_user.id }}">
         </div>
         <div class="form-group">
             <input class="form-control" readonly type="hidden" id="city" name="city" value="{{ vehicle.city }}">

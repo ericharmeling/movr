@@ -24,7 +24,7 @@ class User(Base, UserMixin):
 
     def __repr__(self):
         return "<User(city='%s', id='%s', name='%s')>" % (self.city, self.id, self.first_name + ' ' + self.last_name)
-        
+
 
 class Ride(Base):
     __tablename__ = 'rides'
@@ -63,10 +63,11 @@ class Vehicle(Base):
     creation_time = Column(DateTime, default=datetime.datetime.now)
     status = Column(String)
     current_location = Column(String)
-    ext = Column(JSONB)
+    color = Column(String)
+    brand = Column(String)
 
     def __repr__(self):
-        return "<Vehicle(city='%s', id='%s', type='%s', status='%s', ext='%s')>" % (self.city, self.id, self.type, self.status, self.ext)
+        return "<Vehicle(city='%s', id='%s', type='%s', status='%s')>" % (self.city, self.id, self.type, self.status)
 
 class PromoCode(Base):
     __tablename__ = 'promo_codes'

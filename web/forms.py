@@ -21,9 +21,15 @@ class CredentialForm(FlaskForm):
     submit = SubmitField('Sign In')
 
 class VehicleForm(FlaskForm):
-    city = CityField()
-    vtype = SelectField(label='Vehicles', choices=[('bike', 'Bike'), ('scooter', 'Scooter'), ('skateboard', 'Skateboard')])
-    owner = UserIdField(label='Owner ID: ')
+    city = SelectField('City: ',  choices=[('new york', 'New York'), ('boston', 'Boston'), ('washington dc', 'Washington DC'),
+                ('san francisco', 'San Francisco'), ('seattle', 'Seattle'), ('los angeles', 'Los Angeles'),
+                ('chicago', 'Chicago'), ('detroit', 'Detroit'), ('minneapolis', 'Minneapolis'),
+                ('amsterdam', 'Amsterdam'), ('paris', 'Paris'), ('rome', 'Rome')])
+    type = SelectField(label='Type', choices=[('bike', 'Bike'), ('scooter', 'Scooter'), ('skateboard', 'Skateboard')])
+    color = StringField(label='Color', validators=[validators.Length(min=1, max=15)])
+    brand = StringField(label='Brand', validators=[validators.Length(min=1, max=10)])
+    location = StringField(label='Current location: ', validators=[validators.Length(min=1, max=50)])
+    submit = SubmitField('Add vehicle')
 
 class LocationForm(FlaskForm):
     city = CityField(label='What city are you in?')

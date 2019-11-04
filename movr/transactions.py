@@ -31,9 +31,9 @@ def add_user_txn(session, city, first_name, last_name, address, username, passwo
     session.add(u)
     return {'city': u.city, 'id': u.id}
 
-def add_vehicle_txn(session, city, owner_id, current_location, type, vehicle_metadata, status):
+def add_vehicle_txn(session, city, owner_id, current_location, type, color, brand, status):
     vehicle_type = type
-    vehicle = Vehicle(id=str(uuid.uuid4()), type=vehicle_type, city=city, owner_id=owner_id, current_location = current_location, status=status, ext=vehicle_metadata)
+    vehicle = Vehicle(id=str(uuid.uuid4()), type=vehicle_type, city=city, owner_id=owner_id, current_location = current_location, color=color, brand=brand, status=status)
     session.add(vehicle)
     return {'city': vehicle.city, 'id': vehicle.id}
 
@@ -48,15 +48,14 @@ def get_user_txn(session, username=None, user_id=None):
         user = session.query(User).filter_by(username=username).first()
     elif user_id:
         user = session.query(User).filter_by(id=user_id).first()
-    else:
-        return None
-    session.expunge(user)
+    if user:
+        session.expunge(user)
     return user
 
 
 def get_vehicles_txn(session, city, limit=None):
     vehicles = session.query(Vehicle).filter_by(city=city).limit(limit).all()
-    return list(map(lambda vehicle: {'city': vehicle.city, 'id': vehicle.id, 'type': vehicle.type, 'current_location': vehicle.current_location + ', ' + vehicle.city, 'status': vehicle.status, 'ext': vehicle.ext}, vehicles))
+    return list(map(lambda vehicle: {'city': vehicle.city, 'id': vehicle.id, 'type': vehicle.type, 'current_location': vehicle.current_location + ', ' + vehicle.city, 'status': vehicle.status, 'color': vehicle.color, 'brand': vehicle.brand}, vehicles))
 
 
 def get_rides_txn(session, city, limit=None):
