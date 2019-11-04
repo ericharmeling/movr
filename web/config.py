@@ -9,21 +9,20 @@ class Config(object):
     DB_HOST = 'localhost'
     DB_PORT = 26257
     DB_USER = 'root'
-    DATABASE_URI= 'cockroachdb://{}@{}:{}/movr'.format(DB_USER, DB_HOST, DB_PORT)
+    DEFAULT_DATABASE_URI = 'cockroachdb://{}@{}:{}/{}'.format(DB_USER, DB_HOST, DB_PORT, 'defaultdb')
 
-class ProductionConfig(Config):
-    ENV = 'production'
-    DEBUG = False
-    TESTING = False
-    SECRET_KEY = os.environ['SECRET_KEY']
-    DB_HOST = os.environ['DB_HOST']
-    DB_PORT = os.environ['DB_PORT']
-    DB_USER = os.environ['DB_USER']
-    DATABASE_URI= 'cockroachdb://{}@{}:{}/movr'.format(DB_USER, DB_HOST, DB_PORT)
 
 class DevConfig(Config):
     SECRET_KEY = os.environ['SECRET_KEY']
     DB_HOST = os.environ['DB_HOST']
     DB_PORT = os.environ['DB_PORT']
     DB_USER = os.environ['DB_USER']
-    DATABASE_URI= 'cockroachdb://{}@{}:{}/movr'.format(DB_USER, DB_HOST, DB_PORT)
+    DB_NAME = 'movr'
+    DEFAULT_DATABASE_URI = 'cockroachdb://{}@{}:{}/{}'.format(DB_USER, DB_HOST, DB_PORT, 'defaultdb')
+    DATABASE_URI = 'cockroachdb://{}@{}:{}/{}'.format(DB_USER, DB_HOST, DB_PORT, DB_NAME)
+
+
+class ProductionConfig(DevConfig):
+    ENV = 'production'
+    DEBUG = False
+    TESTING = False
