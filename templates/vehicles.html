@@ -1,40 +1,28 @@
 {% extends 'layout.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
+{% if current_user.is_active %}
+<p class="text-center">You are logged in as {{ current_user.username }}. As a registered user, you can <a href="/vehicles/add"> add a new vehicle</a>.</p>
+{% endif %}
 <div class="list-group">
     {% for vehicle in vehicles %}
-    <a class="list-group-item">
-      <p class="text-center text-capitalize">{{ vehicle.type }}</p>
-      <p class="mb-1 text-center">Vehicle ID: {{ vehicle.id }}</p>
-      <p class="mb-1 text-center">Location: <bf class="text-capitalize">{{ vehicle.current_location }}</bf></p>
-      <p class="mb-1 text-center">Color: <bf class="text-capitalize">{{ vehicle.color }}</bf></p>
-      <p class="mb-1 text-center">Brand: <bf class="text-capitalize">{{ vehicle.brand }}</bf></p>
-      {% if vehicle.status == 'available' %}
-      <div class="d-flex w-100 justify-content-between">
-          <p class="alert alert-success" role="alert">Available</p>
-      </div>
-      <form action="/rides/start" method="POST">
-        <div class="form-group">
-            <input class="form-control" readonly type="hidden" id="vehicle_id" name="vehicle_id" value="{{ vehicle.id }}">
-        </div>
-        <div class="form-group">
-            <input class="form-control" readonly type="hidden" id="rider_id" name="rider_id" value="{{ current_user.id }}">
-        </div>
-        <div class="form-group">
-            <input class="form-control" readonly type="hidden" id="city" name="city" value="{{ vehicle.city }}">
-        </div>
-        <button class="btn btn-primary">Start ride</button>
-      </form>
-      {% else %}
-      <div class="d-flex w-100 justify-content-between">
-          <p class="alert alert-warning" role="alert">Unavailable</p>
-      </div>
-      {% endif %}
-    </a>
+        <a class="list-group-item flex-column align-items-start">
+            <h5><bf class="text-capitalize">{{ vehicle.type }}</bf></h5>    
+            <p>City: <bf class="text-capitalize">{{ vehicle.city }}</bf></p>
+            <p>Location: <bf class="text-capitalize">{{ vehicle.current_location }}</bf></p>
+            <p>Color: <bf class="text-capitalize">{{ vehicle.color }}</bf></p>
+            <p>Brand: <bf class="text-capitalize">{{ vehicle.brand }}</bf></p>
+            <p>Vehicle ID: {{ vehicle.id }}</p>
+            {% if vehicle.status == 'available' %}
+                <p class="alert alert-success text-center" role="alert" style="width: 15rem;">Available</p>
+                <form class="form form-horizontal" method="POST" action="/rides/start/{{ vehicle.id }}">
+                {{ wtf.form_field(form.submit) }}
+                </form>
+                {% else %}
+                <p class="alert alert-warning text-center" role="alert" style="width: 15rem;">Unavailable</p>
+                {% endif %}
+        </a>
     {% endfor %}
-</div>
-<hr>
-<div class="d-flex w-100 justify-content-between">
-    <p class="alert alert-info" role="alert"><a href="/vehicles/add">Add a new vehicle</a></p>
 </div>
 {% endblock %}

@@ -5,7 +5,7 @@ import random
 
 def start_ride_txn(session, city, rider_id, vehicle_id):
     v = session.query(Vehicle).filter_by(city=city, id=vehicle_id).first()
-    r = Ride(city=city, vehicle_city=city, id=str(uuid.uuid4()), rider_id=rider_id, vehicle_id=vehicle_id, start_address=v.current_location)
+    r = Ride(city=city, vehicle_city=city, id=str(uuid.uuid4()), rider_id=rider_id, vehicle_id=vehicle_id, start_location=v.current_location)
     session.add(r)
     v.status = "in_use"
     return {'city': r.city, 'id': r.id}
@@ -40,7 +40,7 @@ def add_vehicle_txn(session, city, owner_id, current_location, type, color, bran
 
 def get_users_txn(session, city, limit=None):
     users = session.query(User).filter_by(city=city).limit(limit).all()
-    return list(map(lambda user: {'city': user.city, 'id': user.id, 'name': user.username}, users))
+    return list(map(lambda user: {'city': user.city, 'id': user.id, 'name': user.username, 'first_name': user.first_name, 'last_name': user.last_name}, users))
 
 
 def get_user_txn(session, username=None, user_id=None):
@@ -60,7 +60,7 @@ def get_vehicles_txn(session, city, limit=None):
 
 def get_rides_txn(session, city, limit=None):
     rides = session.query(Ride).filter_by(city=city).limit(limit).all()
-    return list(map(lambda ride: {'city': ride.city, 'id': ride.id, 'vehicle_id': ride.vehicle_id, 'start_time': ride.start_time, 'end_time': ride.end_time}, rides))
+    return list(map(lambda ride: {'city': ride.city, 'id': ride.id, 'vehicle_id': ride.vehicle_id, 'start_time': ride.start_time, 'end_time': ride.end_time, 'rider_id': ride.rider_id}, rides))
 
 
 def get_promo_codes_txn(session, limit=None):

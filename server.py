@@ -1,20 +1,30 @@
+from sqlalchemy import create_engine
+from sqlalchemy.exc import DBAPIError
 from flask import Flask, __version__, request, render_template, session, redirect, flash, url_for, Markup
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from werkzeug.security import check_password_hash
 from movr.movr import MovR
-from web.forms import CredentialForm, RegisterForm, VehicleForm
-from web.utils import validate_creds, render_or_error, try_route, get_region
+from web.forms import CredentialForm, RegisterForm, VehicleForm, StartRideForm, EndRideForm
 from web.config import DevConfig
 from requests import HTTPError
 
-# Initialize the app
+# Initialize the app and db
 app = Flask(__name__)
 app.config.from_object(DevConfig)
 bootstrap = Bootstrap(app)
 login = LoginManager(app)
 conn_string = app.config.get('DATABASE_URI')
-movr = MovR(conn_string)
+try:
+    movr = MovR(conn_string)
+except Exception as error:
+    print('Error: %s' % error)
+    initdb_uri = app.config.get('DEFAULT_DATABASE_URI')
+    initdb = create_engine(initdb_uri)
+    initdb.execute("CREATE DATABASE IF NOT EXISTS movr")
+    initdb.execute("USE movr")
+    movr = MovR(conn_string)
+
 @login.user_loader
 def load_user(user_id):
     return movr.get_user(user_id=user_id)
@@ -65,13 +75,13 @@ def register():
     else:
         form = RegisterForm()
         if form.validate_on_submit():
-            if not get_region(form.city.data):
-                flash('Unfortunately, MovR hasn\'t made it to your city yet. Try coming back later!')
-                return redirect(url_for('home_page'))
             try:
                 movr.add_user(city=form.city.data, first_name=form.first_name.data, last_name=form.last_name.data, address=form.address.data, username=form.username.data, password=form.password.data)
                 flash('Registration successful! You can now log in as %s.' % form.username.data)
                 return redirect(url_for('login'))
+            except DBAPIError as sql_error:
+                flash('Registration failed. Make sure that you choose a unique username!')
+                return redirect(url_for('register'))
             except Exception as error:
                 flash('Error: %s' % error)
                 return redirect(url_for('register'))
@@ -82,8 +92,9 @@ def register():
 @login_required
 @app.route('/vehicles', methods=['GET'])
 def vehicles():
+    form = StartRideForm()
     vehicles = movr.get_vehicles(current_user.city)
-    return render_template('vehicles.html', title='Vehicles', vehicles=vehicles)
+    return render_template('vehicles.html', title='Vehicles', vehicles=vehicles, form=form) 
 
 
 # Add vehicles route
@@ -106,44 +117,35 @@ def add_vehicle():
 @login_required
 @app.route('/rides', methods=['GET'])
 def rides():
-    rides = movr.get_rides(session['location']['city'])
-    return render_template('rides.html', rides=reversed(rides))
+    form = EndRideForm()
+    rides = movr.get_rides(current_user.city)
+    return render_template('rides.html', title='Rides', rides=reversed(rides), form=form)
 
 
 # Start ride route
 @login_required
-@app.route('/rides/start', methods=['POST'])
-def start_ride():
-    r = request.form
+@app.route('/rides/start/<vehicle_id>', methods=['POST'])
+def start_ride(vehicle_id):
     try:
-        if session['logged_in']:
-            @try_route
-            def post_try():
-                movr.start_ride(city=r['city'], rider_id=r['rider_id'], vehicle_id=r['vehicle_id'])
-                session['riding'] = True
-                rides = movr.get_rides(current_user.city)
-                return render_template('rides.html', rides=reversed(rides))
-            return post_try()
-        else:
-            @try_route
-            def error_page():
-                vehicles = movr.get_vehicles(session['location']['city'])
-                return render_template('vehicles.html', vehicles=vehicles, err='You need to log in start a ride!')
-            return error_page()
-    except KeyError as key_error:
-        return error_page()
+        movr.start_ride(city=current_user.city, rider_id=current_user.id, vehicle_id=vehicle_id)
+        flash('Ride started.')
+        return redirect(url_for('rides'))
+    except Exception as error:
+        flash('Error: %s' % error)
+        return redirect(url_for('vehicles'))
     
 
 # End ride route
 @login_required
-@app.route('/rides/end', methods=['POST'])
-def end_ride():
-    r = request.form
-    @try_route
-    def post_try():
-        movr.end_ride(city=r['city'], vehicle_id=r['vehicle_id'])
-        return render_template('vehicles.html', vehicles=vehicles, err='')
-    return post_try()
+@app.route('/rides/end/<ride_id>', methods=['POST'])
+def end_ride(ride_id):
+    try:
+        movr.end_ride(city=current_user.city, ride_id=ride_id)
+        flash('Ride ended.')
+        return redirect(url_for('rides'))
+    except Exception as error:
+        flash('Error: %s' % error)
+        return redirect(url_for('vehicles'))
 
 
 # Users page

@@ -19,8 +19,10 @@ class MovR:
 
         self.session = sessionmaker(bind=self.engine, expire_on_commit=False)()
 
+
     def __enter__(self):
         return self
+
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.session.close()

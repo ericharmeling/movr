@@ -1,41 +1,30 @@
 {% extends 'layout.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-<p class="h1 text-center">Rides</p>
-<hr>
-{% if err not in ('', null) %}
-<div class="alert alert-warning" role="alert">
-<p class="h5">{{ err }}</p>
-</div>
-{% endif %}
-{% if riding %}
-<h3>You are currently riding a {{ ride_type }}. Your ride ID is {{ ride_id }}. You can only ride one vehicle at a time.</h3> 
-{% else %}
-<div class="d-flex w-100 justify-content-between">
-    <p class="alert alert-info" role="alert">Go to the <a href="/vehicles">Vehicles</a> page to start a ride!</p>
-</div>
+{% if current_user.is_active %}
+<p class="text-center">You are logged in as {{ current_user.username }}. Go to the <a href="/vehicles">Vehicles</a> page to start a ride.</p>
 {% endif %}
 <div class="list-group">
     {% for ride in rides %}
-    <a class="list-group-item list-group-item-action flex-column align-items-start">
-        <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">Ride ID: {{ ride.id }}</h5>
-        </div>
-        <div class="d-flex w-100 justify-content-between">
-            <p class="mb-1">City: <bf class="text-capitalize">{{ ride.city }}</bf></p>
-            <small>This ride started {{ ride.start_time }}.</small>
-        </div>
-        <div class="d-flex w-100 justify-content-between">
-            <p class="mb-1">Vehicle ID: {{ ride.vehicle_id }}</p>
-            {% if ride.end_time != None %}
-            <small>This ride ended {{ ride.end_time }}.</small>
-            {% endif %}
-        </div>
+    <a class="list-group-item flex-column align-items-start">
+        <h5 class="mb-1">Ride ID: {{ ride.id }}</h5>
+        <p>Vehicle ID: {{ ride.vehicle_id }}</p>
+        <p>City: <bf class="text-capitalize">{{ ride.city }}</bf></p>
+        <p>This ride started {{ ride.start_time }}.</p>
+        {% if ride.end_time != None %}
+        <p>This ride ended {{ ride.end_time }}.</p>
+        {% endif %}
         <div class="d-flex w-100 justify-content-between">
         {% if ride.end_time == None %}
-        <p class="alert alert-success" role="alert">Active</p>
+        <p class="alert alert-success text-center" role="alert" style="width: 15rem;">Active</p>
+        {% if current_user.id == ride.rider_id %}
+        <form class="form form-horizontal" method="POST" action="/rides/end/{{ ride.id }}">
+            {{ wtf.form_field(form.submit) }}
+        </form>
+        {% endif %}
         {% else %}
-        <p class="alert alert-warning" role="alert">Inactive</p>
+        <p class="alert alert-warning text-center" role="alert" style="width: 15rem;">Inactive</p>
         {% endif %}
         </div>
     </a>
