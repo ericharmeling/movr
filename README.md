@@ -13,4 +13,4 @@ For more information about MovR, see the [MovR webpage](https://www.cockroachlab
 
 ## Developer Tutorial
 
-For a complete tutorial about developing web applications on top of CockroachDB, see the [Developer Guide](docs/dev-guide.md).
+For a complete tutorial about developing web applications on top of CockroachDB, see the [Developer Guide](https://github.com/cockroachdb/docs/pull/5732).
