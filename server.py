@@ -1,19 +1,21 @@
-from sqlalchemy import create_engine
-from sqlalchemy.exc import DBAPIError
-from flask import Flask, __version__, request, render_template, session, redirect, flash, url_for, Markup
+# This file contains the main web application server
+from flask import Flask, __version__, render_template, session, redirect, flash, url_for, Markup
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from werkzeug.security import check_password_hash
+from sqlalchemy import create_engine
+from sqlalchemy.exc import DBAPIError
 from movr.movr import MovR
 from web.forms import CredentialForm, RegisterForm, VehicleForm, StartRideForm, EndRideForm
 from web.config import DevConfig
-from requests import HTTPError
 
-# Initialize the app and db
+# Initialize the app
 app = Flask(__name__)
 app.config.from_object(DevConfig)
 bootstrap = Bootstrap(app)
 login = LoginManager(app)
+
+# Initialize the db connection
 conn_string = app.config.get('DATABASE_URI')
 try:
     movr = MovR(conn_string)
@@ -25,6 +27,7 @@ except Exception as error:
     initdb.execute("USE movr")
     movr = MovR(conn_string)
 
+# Define user_loader function for login manager
 @login.user_loader
 def load_user(user_id):
     return movr.get_user(user_id=user_id)
@@ -63,6 +66,7 @@ def login():
 @app.route('/logout')
 def logout():
     logout_user()
+    session['riding'] = None
     flash('You have successfully logged out.')
     return redirect('/login')
 
@@ -119,7 +123,12 @@ def add_vehicle():
 def rides():
     form = EndRideForm()
     rides = movr.get_rides(current_user.city)
-    return render_template('rides.html', title='Rides', rides=reversed(rides), form=form)
+    for ride in rides:
+        if current_user.id == ride['rider_id']:
+            if ride['end_time'] == None:
+                session['riding'] = True
+                pass
+    return render_template('rides.html', title='Rides', rides=reversed(rides), form=form, riding=session['riding'])
 
 
 # Start ride route
@@ -127,7 +136,18 @@ def rides():
 @app.route('/rides/start/<vehicle_id>', methods=['POST'])
 def start_ride(vehicle_id):
     try:
+        if session['riding'] == None:
+            rides = movr.get_rides(current_user.city)
+            for ride in rides:
+                if current_user.id == ride['rider_id']:
+                    if ride['end_time'] == None:
+                        session['riding'] = True
+                        pass
+        if session['riding']:
+            flash('You are already riding. End your current ride before starting a new one!')
+            return redirect(url_for('rides'))
         movr.start_ride(city=current_user.city, rider_id=current_user.id, vehicle_id=vehicle_id)
+        session['riding'] = True
         flash('Ride started.')
         return redirect(url_for('rides'))
     except Exception as error:
@@ -141,6 +161,7 @@ def start_ride(vehicle_id):
 def end_ride(ride_id):
     try:
         movr.end_ride(city=current_user.city, ride_id=ride_id)
+        session['riding'] = False
         flash('Ride ended.')
         return redirect(url_for('rides'))
     except Exception as error:

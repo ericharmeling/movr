@@ -2,9 +2,7 @@
 
 {% block app_content %}
   {% if current_user.is_active %}
-    <div>
-        <h1 class="text-center">Welcome <bf class="text-capitalize">{{ current_user.first_name }}</bf>!</h1>
-    </div>
+    <h1 class="text-center">Welcome <bf class="text-capitalize">{{ current_user.first_name }}</bf>!</h1>
     <hr>
     <p class="text-center">You are logged in and ready to ride in <bf class="text-capitalize">{{ current_user.city }}</bf>.</p>
     <p class="text-center">To start riding, go to the <a href="/vehicles">Vehicles</a> page.</p>

@@ -59,7 +59,7 @@ def get_vehicles_txn(session, city, limit=None):
 
 
 def get_rides_txn(session, city, limit=None):
-    rides = session.query(Ride).filter_by(city=city).limit(limit).all()
+    rides = session.query(Ride).filter_by(city=city).order_by(Ride.start_time).limit(limit).all()
     return list(map(lambda ride: {'city': ride.city, 'id': ride.id, 'vehicle_id': ride.vehicle_id, 'start_time': ride.start_time, 'end_time': ride.end_time, 'rider_id': ride.rider_id}, rides))
 
 
