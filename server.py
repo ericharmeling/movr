@@ -37,6 +37,7 @@ def load_user(user_id):
 @app.route('/', methods=['GET'])
 @app.route('/home', methods=['GET'])
 def home_page():
+    session['riding'] = None
     return render_template('home.html')
 
 
@@ -49,10 +50,11 @@ def login():
         form = CredentialForm()
         if form.validate_on_submit():
             try:
-                user = movr.get_user(form.username.data)
+                user = movr.get_user(username=form.username.data)
                 if user is None or not check_password_hash(user.password_hash, form.password.data):
                     flash(Markup('Invalid user credentials.<br>If you aren\'t registered with MovR, go <a href="%s">Sign Up</a>!') % url_for('register'))
                     return redirect(url_for('login'))
+                
                 login_user(user)
                 return redirect(url_for('home_page'))
             except Exception as error:
@@ -108,7 +110,7 @@ def add_vehicle():
     form = VehicleForm()
     if form.validate_on_submit():
         try:
-            movr.add_vehicle(city=form.city.data, owner_id=current_user.id, current_location=form.location.data, type=form.type.data, color=form.color.data, brand=form.brand.data, status='available')
+            movr.add_vehicle(city=form.city.data, owner_id=current_user.id, last_location=form.location.data, type=form.type.data, color=form.color.data, brand=form.brand.data, status='available')
             flash('Vehicle added!')
             return redirect(url_for('vehicles'))
         except Exception as error:
@@ -122,7 +124,7 @@ def add_vehicle():
 @app.route('/rides', methods=['GET'])
 def rides():
     form = EndRideForm()
-    rides = movr.get_rides(current_user.city)
+    rides = movr.get_rides(current_user.id)
     for ride in rides:
         if current_user.id == ride['rider_id']:
             if ride['end_time'] == None:
@@ -137,7 +139,7 @@ def rides():
 def start_ride(vehicle_id):
     try:
         if session['riding'] == None:
-            rides = movr.get_rides(current_user.city)
+            rides = movr.get_rides(current_user.id)
             for ride in rides:
                 if current_user.id == ride['rider_id']:
                     if ride['end_time'] == None:
