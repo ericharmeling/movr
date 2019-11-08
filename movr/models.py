@@ -1,7 +1,7 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Index, String, DateTime, Integer, Float, Interval, ForeignKey, CheckConstraint
-from sqlalchemy.types import DECIMAL, BINARY
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.types import DECIMAL, DATE
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
 import uuid
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -15,10 +15,10 @@ class User(Base, UserMixin):
     city = Column(String, primary_key=True)
     first_name = Column(String)
     last_name = Column(String)
-    address = Column(String)
+    email = Column(String)
     username = Column(String, unique=True)
     password_hash = Column(String)
-    promos_used = Column(JSONB)
+    promos_used = Column(String)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -33,7 +33,7 @@ class Vehicle(Base):
     city = Column(String, primary_key=True)
     type = Column(String)
     owner_id = Column(UUID, ForeignKey('users.id'))
-    creation_time = Column(DateTime, default=datetime.datetime.now)
+    date_added = Column(DATE, default=datetime.date.today)
     status = Column(String)
     last_location = Column(String)
     color = Column(String)
@@ -62,7 +62,6 @@ class Ride(Base):
 
 class PromoCode(Base):
     __tablename__ = 'promo_codes'
-    id = Column(UUID, primary_key=True)
     code = Column(String, primary_key=True)
     description = Column(String)
     creation_time = Column(DateTime, default=datetime.datetime.now)
@@ -70,6 +69,6 @@ class PromoCode(Base):
     percent_off = Column(Integer, CheckConstraint('percent_off BETWEEN 0 AND 100'))
 
     def __repr__(self):
-        return "<PromoCode(code='%s', description='%s', creation_time='%s', expiration_time='%s', rules='%s')>" % \
-               (self.code, self.description, self.creation_time, self.expiration_time, self.rules)
+        return "<PromoCode(code='%s', description='%s', date_added='%s', expiration_time='%s', rules='%s')>" % \
+               (self.code, self.description, self.date_added, self.expiration_time, self.rules)
 

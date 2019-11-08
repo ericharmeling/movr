@@ -19,6 +19,9 @@
             {% if ride.end_time == None %}
             <p class="alert alert-success text-center" role="alert" style="width: 15rem;">Active</p>
             <form class="form form-horizontal" method="POST" action="/rides/end/{{ ride.id }}">
+                {{ form.hidden_tag() }}
+                {{ wtf.form_field(form.location) }}
+                {{ wtf.form_field(form.promo_code) }}
                 {{ wtf.form_field(form.submit) }}
             </form>
             {% else %}

@@ -32,12 +32,12 @@ class MovR:
         return run_transaction(sessionmaker(bind=self.engine), lambda session: start_ride_txn(session, city, rider_id, vehicle_id))
 
 
-    def end_ride(self, city, ride_id, location):
-        return run_transaction(sessionmaker(bind=self.engine), lambda session: end_ride_txn(session, city, ride_id, location))
+    def end_ride(self, city, ride_id, location, promo_code):
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: end_ride_txn(session, city, ride_id, location, promo_code))
 
 
-    def add_user(self, city, first_name, last_name, address, username, password):
-        return run_transaction(sessionmaker(bind=self.engine), lambda session: add_user_txn(session, city, first_name, last_name, address, username, password))
+    def add_user(self, city, first_name, last_name, email, username, password):
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: add_user_txn(session, city, first_name, last_name, email, username, password))
 
 
     def add_vehicle(self, city, owner_id, last_location, type, color, brand, status):
@@ -64,8 +64,8 @@ class MovR:
         return run_transaction(sessionmaker(bind=self.engine), lambda session: get_promo_codes_txn(session))
 
 
-    def create_promo_code(self, code, description, expiration_time, rules):
-        return run_transaction(sessionmaker(bind=self.engine), lambda session: add_promo_code_txn(session, code, description, expiration_time, rules))
+    def create_promo_code(self, code, description, expiration_time, percent_off):
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: add_promo_code_txn(session, code, description, expiration_time, percent_off))
 
 
     def apply_promo_code(self, user_city, user_id, promo_code):

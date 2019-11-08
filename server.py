@@ -1,5 +1,5 @@
 # This file contains the main web application server
-from flask import Flask, __version__, render_template, session, redirect, flash, url_for, Markup
+from flask import Flask, __version__, render_template, session, redirect, flash, url_for, Markup, request
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from werkzeug.security import check_password_hash
@@ -82,10 +82,11 @@ def register():
         form = RegisterForm()
         if form.validate_on_submit():
             try:
-                movr.add_user(city=form.city.data, first_name=form.first_name.data, last_name=form.last_name.data, address=form.address.data, username=form.username.data, password=form.password.data)
+                movr.add_user(city=form.city.data, first_name=form.first_name.data, last_name=form.last_name.data, email=form.email.data, username=form.username.data, password=form.password.data)
                 flash('Registration successful! You can now log in as %s.' % form.username.data)
                 return redirect(url_for('login'))
             except DBAPIError as sql_error:
+                print(sql_error)
                 flash('Registration failed. Make sure that you choose a unique username!')
                 return redirect(url_for('register'))
             except Exception as error:
@@ -110,7 +111,7 @@ def add_vehicle():
     form = VehicleForm()
     if form.validate_on_submit():
         try:
-            movr.add_vehicle(city=form.city.data, owner_id=current_user.id, last_location=form.location.data, type=form.type.data, color=form.color.data, brand=form.brand.data, status='available')
+            movr.add_vehicle(city=current_user.city, owner_id=current_user.id, last_location=form.location.data, type=form.type.data, color=form.color.data, brand=form.brand.data, status='available')
             flash('Vehicle added!')
             return redirect(url_for('vehicles'))
         except Exception as error:
@@ -162,7 +163,8 @@ def start_ride(vehicle_id):
 @app.route('/rides/end/<ride_id>', methods=['POST'])
 def end_ride(ride_id):
     try:
-        movr.end_ride(city=current_user.city, ride_id=ride_id)
+        form = EndRideForm()
+        movr.end_ride(city=current_user.city, ride_id=ride_id, location=form.location.data, promo_code=form.promo_code.data)
         session['riding'] = False
         flash('Ride ended.')
         return redirect(url_for('rides'))
