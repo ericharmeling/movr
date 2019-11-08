@@ -9,14 +9,13 @@ CREATE TABLE users (
       city STRING NOT NULL,
       first_name STRING NULL,
       last_name STRING NULL,
-      address STRING NULL,
       email STRING NULL,
       username STRING NULL,
       password_hash STRING NULL,
-      promos_used JSONB NULL, 
+      promos_used STRING ARRAY NULL, 
       CONSTRAINT "primary" PRIMARY KEY (city ASC, id ASC),
       UNIQUE INDEX users_username_key (username ASC),
-      FAMILY "primary" (id, city, first_name, last_name, address, email, username, password_hash, promos_used)
+      FAMILY "primary" (id, city, first_name, last_name, email, username, password_hash, promos_used)
   ) PARTITION BY LIST (city) (
       PARTITION us_west VALUES IN (('seattle'), ('san francisco'), ('los angeles')),
       PARTITION us_east VALUES IN (('new york'), ('boston'), ('washington dc')),
@@ -35,7 +34,7 @@ CREATE TABLE vehicles (
       city STRING NOT NULL,
       type STRING NULL,
       owner_id UUID NULL,
-      creation_time TIMESTAMP NULL,
+      date_added DATE NULL,
       status STRING NULL,
       last_location STRING NULL,
       color STRING NULL,
@@ -47,7 +46,7 @@ CREATE TABLE vehicles (
           PARTITION us_east VALUES IN (('new york'), ('boston'), ('washington dc')),
           PARTITION europe_west VALUES IN (('amsterdam'), ('paris'), ('rome'))
       ),
-      FAMILY "primary" (id, city, type, owner_id, creation_time, status, last_location, color, brand)
+      FAMILY "primary" (id, city, type, owner_id, date_added, status, last_location, color, brand)
   ) PARTITION BY LIST (city) (
       PARTITION us_west VALUES IN (('seattle'), ('san francisco'), ('los angeles')),
       PARTITION us_east VALUES IN (('new york'), ('boston'), ('washington dc')),
@@ -121,14 +120,13 @@ CREATE TABLE vehicles (
 
 
   CREATE TABLE promo_codes (
-      id UUID NOT NULL,
       code STRING NOT NULL UNIQUE,
       description STRING NULL,
       creation_time TIMESTAMP NULL,
       expiration_time TIMESTAMP NULL,
       percent_off INT NULL,
-      CONSTRAINT "primary" PRIMARY KEY (id ASC, code ASC),
+      CONSTRAINT "primary" PRIMARY KEY (code ASC),
       CONSTRAINT is_percent CHECK (percent_off BETWEEN 0 AND 100),
-      FAMILY "primary" (id, code, description, creation_time, expiration_time, percent_off)
+      FAMILY "primary" (code, description, creation_time, expiration_time, percent_off)
   );
 
