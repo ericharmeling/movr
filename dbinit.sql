@@ -1,10 +1,10 @@
-CREATE DATABASE movr;
+CREATE DATABASE IF NOT EXISTS movr;
 
 
 USE movr;
 
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
       id UUID NOT NULL,
       city STRING NOT NULL,
       first_name STRING NULL,
@@ -14,6 +14,7 @@ CREATE TABLE users (
       password_hash STRING NULL,
       promos_used STRING ARRAY NULL, 
       CONSTRAINT "primary" PRIMARY KEY (city ASC, id ASC),
+      CONSTRAINT check_city CHECK (city IN ('amsterdam','boston','los angeles','new york','paris','rome','san francisco','seattle','washington dc')),
       UNIQUE INDEX users_username_key (username ASC),
       FAMILY "primary" (id, city, first_name, last_name, email, username, password_hash, promos_used)
   ) PARTITION BY LIST (city) (
@@ -29,7 +30,7 @@ CREATE TABLE users (
       constraints = '[+region=us-west1]'
 ;
 
-CREATE TABLE vehicles (
+CREATE TABLE IF NOT EXISTS vehicles (
       id UUID NOT NULL,
       city STRING NOT NULL,
       type STRING NULL,
@@ -40,6 +41,7 @@ CREATE TABLE vehicles (
       color STRING NULL,
       brand STRING NULL,
       CONSTRAINT "primary" PRIMARY KEY (city ASC, id ASC),
+      CONSTRAINT check_city CHECK (city IN ('amsterdam','boston','los angeles','new york','paris','rome','san francisco','seattle','washington dc')),      
       CONSTRAINT fk_city_ref_users FOREIGN KEY (city, owner_id) REFERENCES users(city, id),
       INDEX vehicles_auto_index_fk_city_ref_users (city ASC, owner_id ASC) PARTITION BY LIST (city) (
           PARTITION us_west VALUES IN (('seattle'), ('san francisco'), ('los angeles')),
@@ -66,7 +68,7 @@ CREATE TABLE vehicles (
       constraints = '[+region=us-west1]'
 ;
 
-  CREATE TABLE rides (
+  CREATE TABLE IF NOT EXISTS rides (
       id UUID NOT NULL,
       city STRING NOT NULL,
       rider_id UUID NULL,
@@ -79,6 +81,7 @@ CREATE TABLE vehicles (
       length INTERVAL NULL,
       revenue DECIMAL(10,2) NULL,
       CONSTRAINT "primary" PRIMARY KEY (city ASC, id ASC),
+      CONSTRAINT check_city CHECK (city IN ('amsterdam','boston','los angeles','new york','paris','rome','san francisco','seattle','washington dc')),
       CONSTRAINT fk_city_ref_users FOREIGN KEY (city, rider_id) REFERENCES users(city, id),
       CONSTRAINT fk_vehicle_city_ref_vehicles FOREIGN KEY (vehicle_city, vehicle_id) REFERENCES vehicles(city, id),
       INDEX rides_auto_index_fk_city_ref_users (city ASC, rider_id ASC) PARTITION BY LIST (city) (
@@ -119,7 +122,7 @@ CREATE TABLE vehicles (
 ;
 
 
-  CREATE TABLE promo_codes (
+  CREATE TABLE IF NOT EXISTS promo_codes (
       code STRING NOT NULL UNIQUE,
       description STRING NULL,
       creation_time TIMESTAMP NULL,
