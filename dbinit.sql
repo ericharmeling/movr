@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
       username STRING NULL,
       password_hash STRING NULL,
       promos_used STRING ARRAY NULL, 
+      is_owner BOOL NULL,
       CONSTRAINT "primary" PRIMARY KEY (city ASC, id ASC),
       CONSTRAINT check_city CHECK (city IN ('amsterdam','boston','los angeles','new york','paris','rome','san francisco','seattle','washington dc')),
       UNIQUE INDEX users_username_key (username ASC),
@@ -133,3 +134,4 @@ CREATE TABLE IF NOT EXISTS vehicles (
       FAMILY "primary" (code, description, creation_time, expiration_time, percent_off)
   );
 
+INSERT INTO promo_codes VALUES ('75OFF', '75% off!', CURRENT_TIMESTAMP, NULL, 75),('25OFF', '25% off!', CURRENT_TIMESTAMP, NULL, 25);
