@@ -8,19 +8,19 @@
     {% endblock %}
     {% block content %}
     {% if title %}
-    <h1 class="text-center">{{ title }}</h1>
-    <hr>
+        <h1 class="text-center">{{ title }}</h1>
+        <hr>
     {% endif %}
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 <ul class="flashes">
                 {% for message in messages %}
-                <div class="alert alert-warning" role="alert">{{ message }}</div>
+                    <div class="alert alert-warning" role="alert">{{ message }}</div>
                 {% endfor %}
             </ul>
             {% endif %}
         {% endwith %}
-        {% block app_content %}
-        {% endblock %}
+    {% block app_content %}
+    {% endblock %}
     {% endblock %}
 {% endblock %}

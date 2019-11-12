@@ -9,24 +9,23 @@
         <a class="list-group-item flex-column align-items-start">
             <h5 class="mb-1">Ride ID: {{ ride.id }}</h5>
             <p>Vehicle ID: {{ ride.vehicle_id }}</p>
-            <p>City: <bf class="text-capitalize">{{ ride.city }}</bf></p>
             <p>This ride started {{ ride.start_time }}.</p>
             {% if ride.end_time != None %}
-            <p>This ride ended {{ ride.end_time }}, for a total length of {{ ride.length }}.</p>
-            <p>The ride cost is ${{ ride.revenue }}</p>
+                <p>This ride ended {{ ride.end_time }}, for a total length of {{ ride.length }}.</p>
+                <p>The ride cost is ${{ ride.revenue }}.</p>
             {% endif %}
             <div class="d-flex w-100 justify-content-between">
-            {% if ride.end_time == None %}
-            <p class="alert alert-success text-center" role="alert" style="width: 15rem;">Active</p>
-            <form class="form form-horizontal" method="POST" action="/rides/end/{{ ride.id }}">
-                {{ form.hidden_tag() }}
-                {{ wtf.form_field(form.location) }}
-                {{ wtf.form_field(form.promo_code) }}
-                {{ wtf.form_field(form.submit) }}
-            </form>
-            {% else %}
-            <p class="alert alert-warning text-center" role="alert" style="width: 15rem;">Inactive</p>
-            {% endif %}
+                {% if ride.end_time == None %}
+                    <p class="alert alert-success text-center" role="alert" style="width: 15rem;">Active</p>
+                    <form class="form" method="POST" style="width: 25rem;" action="/rides/end/{{ ride.id }}">
+                        {{ form.hidden_tag() }}
+                        {{ wtf.form_field(form.location) }}
+                        {{ wtf.form_field(form.submit) }}
+                        {{ wtf.form_field(form.promo_code) }}
+                    </form>
+                {% else %}
+                    <p class="alert alert-warning text-center" role="alert" style="width: 15rem;">Inactive</p>
+                {% endif %}
             </div>
         </a>
         {% endif %}

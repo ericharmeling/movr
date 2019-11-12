@@ -8,28 +8,31 @@
         <a href="/">Home</a>
       </li>
       {% if current_user.is_active %}
-       <li>
-        <a href="/vehicles">Vehicles</a>
-      </li>
-      <li>
-        <a href="/rides">Rides</a>
-      </li>
-      <li>
-        <a href="/users">Users</a>
-      </li>
-      <li>
-        <a href="/vehicles/add">Add a vehicle</a>
-      </li>
-      <li>
-        <a href="/logout">Log out</a>
-      </li>
+        <li>
+          <a href="/vehicles">Vehicles</a>
+        </li>
+        <li>
+          <a href="/rides">Rides</a>
+        </li>
+        <li>
+          <a href="/users">Users</a>
+        </li>
+        <li>
+          <a href="/vehicles/add">Add a vehicle</a>
+        </li>
+        <li>
+          <a href="/users/{{ current_user.id }}">Your profile</a>
+        </li>
+        <li>
+          <a href="/logout">Log out</a>
+        </li>
       {% else %}
-      <li>
-        <a href="/login">Log in</a>
-      </li>
-      <li>
-        <a href="/register">Sign up</a>
-      </li>
+        <li>
+          <a href="/login">Log in</a>
+        </li>
+        <li>
+          <a href="/register">Sign up</a>
+        </li>
       {% endif %}
     </ul>
   </div>
