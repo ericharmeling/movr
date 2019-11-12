@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Index, String, DateTime, Integer, Float, Interval, ForeignKey, CheckConstraint
+from sqlalchemy import Column, Index, String, DateTime, Integer, Boolean, Float, Interval, ForeignKey, CheckConstraint
 from sqlalchemy.types import DECIMAL, DATE
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 import uuid
@@ -18,7 +18,8 @@ class User(Base, UserMixin):
     email = Column(String)
     username = Column(String, unique=True)
     password_hash = Column(String)
-    promos_used = Column(String)
+    promos_used = Column(ARRAY(String))
+    is_owner = Column(Boolean)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -69,6 +70,6 @@ class PromoCode(Base):
     percent_off = Column(Integer, CheckConstraint('percent_off BETWEEN 0 AND 100'))
 
     def __repr__(self):
-        return "<PromoCode(code='%s', description='%s', date_added='%s', expiration_time='%s', rules='%s')>" % \
-               (self.code, self.description, self.date_added, self.expiration_time, self.rules)
+        return "<PromoCode(code='%s', description='%s', expiration_time='%s', percent_off='%s')>" % \
+               (self.code, self.description, self.expiration_time, self.percent_off)
 
