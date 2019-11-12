@@ -1,10 +1,11 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, HiddenField, validators
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, HiddenField
+from wtforms.validators import data_required
 
 
 class CredentialForm(FlaskForm):
-    username = StringField('Username: ', validators=[validators.Length(min=1, max=30)])
-    password = PasswordField('Password: ', validators=[validators.Length(min=1, max=30)])
+    username = StringField('Username: ', validators=[data_required()])
+    password = PasswordField('Password: ', validators=[data_required()])
     submit = SubmitField('Sign In')
 
 
@@ -13,17 +14,21 @@ class StartRideForm(FlaskForm):
 
 
 class EndRideForm(FlaskForm):
-    location = StringField(label='Where are you leaving the vehicle?', validators=[validators.Length(min=1, max=50)])
-    promo_code = StringField(label='Enter a promo code, if you have one!', validators=[validators.Length(min=1, max=10)])
+    location = StringField(label='Where are you leaving the vehicle?', validators=[data_required()])
+    promo_code = StringField(label='Enter a promo code, if you have one.')
     submit = SubmitField('End ride')
 
 
 class VehicleForm(FlaskForm):
     type = SelectField(label='Type', choices=[('bike', 'Bike'), ('scooter', 'Scooter'), ('skateboard', 'Skateboard')])
-    color = StringField(label='Color', validators=[validators.Length(min=1, max=15)])
-    brand = StringField(label='Brand', validators=[validators.Length(min=1, max=15)])
-    location = StringField(label='Current location: ', validators=[validators.Length(min=1, max=50)])
+    color = StringField(label='Color', validators=[data_required()])
+    brand = StringField(label='Brand')
+    location = StringField(label='Current location: ', validators=[data_required()])
     submit = SubmitField('Add vehicle')
+
+
+class RemoveVehicleForm(FlaskForm):
+    submit = SubmitField('Remove vehicle')
 
 
 class RegisterForm(FlaskForm):
@@ -31,11 +36,15 @@ class RegisterForm(FlaskForm):
                 ('san francisco', 'San Francisco'), ('seattle', 'Seattle'), ('los angeles', 'Los Angeles'),
                 ('chicago', 'Chicago'), ('detroit', 'Detroit'), ('minneapolis', 'Minneapolis'),
                 ('amsterdam', 'Amsterdam'), ('paris', 'Paris'), ('rome', 'Rome')])
-    first_name = StringField('First name: ', validators=[validators.Length(min=1, max=30)])
-    last_name = StringField('Last name: ', validators=[validators.Length(min=1, max=30)])
-    email = StringField('Email', validators=[validators.Length(min=1, max=30)])
-    username = StringField('Username: ', validators=[validators.Length(min=1, max=30)])
-    password = PasswordField('Password: ', validators=[validators.Length(min=1, max=30)])
+    first_name = StringField('First name: ', validators=[data_required()])
+    last_name = StringField('Last name: ', validators=[data_required()])
+    email = StringField('Email', validators=[data_required()])
+    username = StringField('Username: ', validators=[data_required()])
+    password = PasswordField('Password: ', validators=[data_required()])
     submit = SubmitField('Register')
+
+
+class RemoveUserForm(FlaskForm):
+    submit = SubmitField('Delete my account.')
     
     
