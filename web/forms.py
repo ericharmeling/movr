@@ -15,7 +15,6 @@ class StartRideForm(FlaskForm):
 
 class EndRideForm(FlaskForm):
     location = StringField(label='Where are you leaving the vehicle?', validators=[data_required()])
-    promo_code = StringField(label='Enter a promo code, if you have one.')
     submit = SubmitField('End ride')
 
 
@@ -45,6 +44,6 @@ class RegisterForm(FlaskForm):
 
 
 class RemoveUserForm(FlaskForm):
-    submit = SubmitField('Delete my account.')
+    submit = SubmitField('Delete my account')
     
     

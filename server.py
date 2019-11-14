@@ -8,6 +8,7 @@ from sqlalchemy.exc import DBAPIError
 from movr.movr import MovR
 from web.forms import CredentialForm, RegisterForm, VehicleForm, StartRideForm, EndRideForm, RemoveUserForm, RemoveVehicleForm
 from web.config import DevConfig
+from web.location import Location
 
 # Initialize the app
 app = Flask(__name__)
@@ -17,15 +18,7 @@ login = LoginManager(app)
 
 # Initialize the db connection
 conn_string = app.config.get('DATABASE_URI')
-try:
-    movr = MovR(conn_string)
-except Exception as error:
-    print('Error: {0}'.format(error))
-    initdb_uri = app.config.get('DEFAULT_DATABASE_URI')
-    initdb = create_engine(initdb_uri)
-    initdb.execute("CREATE DATABASE IF NOT EXISTS movr")
-    initdb.execute("USE movr")
-    movr = MovR(conn_string)
+movr = MovR(conn_string)
 
 # Define user_loader function for login manager
 @login.user_loader
@@ -37,9 +30,14 @@ def load_user(user_id):
 @app.route('/', methods=['GET'])
 @app.route('/home', methods=['GET'])
 def home_page():
+    if app.config.get('DEBUG'):
+        client_location = Location(city='new york')
+    else:
+        client_location = Location(ip=request.remote_addr)
+        session['city'] = client_location.city
+    session['region'] = client_location.region
     session['riding'] = None
-    print(current_user.is_active)
-    return render_template('home.html')
+    return render_template('home.html', available=session['region'])
 
 
 # Login page 
@@ -61,7 +59,7 @@ def login():
             except Exception as error:
                 flash('{0}'.format(error))
                 return redirect(url_for('login'))
-        return render_template('login.html', title='Log In', form=form)
+        return render_template('login.html', title='Log In', form=form, available=session['region'])
 
 
 # Logout route
@@ -78,7 +76,7 @@ def logout():
 @app.route('/register', methods=['GET','POST'])
 def register():
     if current_user.is_authenticated:
-        return render_template('register.html', title='Sign Up')
+        return render_template('register.html', title='Sign Up', available=session['region'])
     else:
         form = RegisterForm()
         if form.validate_on_submit():
@@ -93,7 +91,7 @@ def register():
             except Exception as error:
                 flash('{0}'.format(error))
                 return redirect(url_for('register'))
-        return render_template('register.html', title='Sign Up', form=form)
+        return render_template('register.html', title='Sign Up', form=form, available=session['region'])
 
 
 # Remove user route
@@ -113,7 +111,7 @@ def remove_user(user_id):
 def vehicles():
     form = StartRideForm()
     vehicles = movr.get_vehicles(current_user.city)
-    return render_template('vehicles.html', title='Vehicles', vehicles=vehicles, form=form) 
+    return render_template('vehicles.html', title='Vehicles', vehicles=vehicles, form=form, available=session['region']) 
 
 
 # Add vehicles route
@@ -129,7 +127,7 @@ def add_vehicle():
         except Exception as error:
             flash('{0}'.format(error))
             return redirect(url_for('vehicles'))
-    return render_template('vehicles-add.html', title='Add a vehicle', form=form)
+    return render_template('vehicles-add.html', title='Add a vehicle', form=form, available=session['region'])
 
 
 # Remove vehicle route
@@ -152,7 +150,7 @@ def rides():
             if ride['end_time'] == None:
                 session['riding'] = True
                 pass
-    return render_template('rides.html', title='Rides', rides=reversed(rides), form=form, riding=session['riding'])
+    return render_template('rides.html', title='Rides', rides=reversed(rides), form=form, riding=session['riding'], available=session['region'])
 
 
 # Start ride route
@@ -185,7 +183,7 @@ def start_ride(vehicle_id):
 def end_ride(ride_id):
     try:
         form = EndRideForm()
-        movr.end_ride(city=current_user.city, ride_id=ride_id, location=form.location.data, promo_code=form.promo_code.data)
+        movr.end_ride(city=current_user.city, ride_id=ride_id, location=form.location.data)
         session['riding'] = False
         flash('Ride ended.')
         return redirect(url_for('rides'))
@@ -200,7 +198,7 @@ def end_ride(ride_id):
 def users():
     if current_user.is_authenticated:
         users = movr.get_users(current_user.city)
-        return render_template('users.html', title='Users', users=users)
+        return render_template('users.html', title='Users', users=users, available=session['region'])
     else:
         flash('You need to log in to see active users in your city!')
         return redirect(url_for('login'))
@@ -211,13 +209,14 @@ def users():
 def user(user_id):
     v = movr.get_vehicles(city=current_user.city)
     r = movr.get_rides(city=current_user.city, rider_id=current_user.id)
-    total= 0
+    total = 0
     for ride in r:
-        total = total + ride['revenue']
+        if ride['revenue']:
+            total = total + ride['revenue']
     form_u = RemoveUserForm()
     form_v = RemoveVehicleForm()
     if current_user.is_authenticated and user_id == current_user.id:
-        return render_template('user.html', title='{0} {1}'.format(current_user.first_name, current_user.last_name), form_u=form_u, form_v=form_v, vehicles=v, total=total)
+        return render_template('user.html', title='{0} {1}'.format(current_user.first_name, current_user.last_name), form_u=form_u, form_v=form_v, vehicles=v, total=total, available=session['region'])
     else:
         flash('You need to log in to see your profile!')
         return redirect(url_for('login'))

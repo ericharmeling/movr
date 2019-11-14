@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects import registry
 registry.register("cockroachdb", "cockroachdb.sqlalchemy.dialect", "CockroachDBDialect")
-from movr.transactions import start_ride_txn, end_ride_txn, add_user_txn, add_vehicle_txn, get_users_txn, get_user_txn, get_vehicles_txn, get_rides_txn, get_promo_codes_txn, add_promo_code_txn, remove_user_txn, remove_vehicle_txn
+from movr.transactions import start_ride_txn, end_ride_txn, add_user_txn, add_vehicle_txn, get_users_txn, get_user_txn, get_vehicles_txn, get_rides_txn, remove_user_txn, remove_vehicle_txn
 
 class MovR:
     def __init__(self, conn_string, echo = False):
@@ -23,8 +23,8 @@ class MovR:
         return run_transaction(sessionmaker(bind=self.engine), lambda session: start_ride_txn(session, city, rider_id, vehicle_id))
 
 
-    def end_ride(self, city, ride_id, location, promo_code):
-        return run_transaction(sessionmaker(bind=self.engine), lambda session: end_ride_txn(session, city, ride_id, location, promo_code))
+    def end_ride(self, city, ride_id, location):
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: end_ride_txn(session, city, ride_id, location))
 
 
     def add_user(self, city, first_name, last_name, email, username, password):
@@ -57,12 +57,4 @@ class MovR:
 
     def get_rides(self, city, rider_id):
         return run_transaction(sessionmaker(bind=self.engine), lambda session: get_rides_txn(session, city, rider_id))
-
-
-    def get_promo_codes(self):
-        return run_transaction(sessionmaker(bind=self.engine), lambda session: get_promo_codes_txn(session))
-
-
-    def create_promo_code(self, code, description, expiration_time, percent_off):
-        return run_transaction(sessionmaker(bind=self.engine), lambda session: add_promo_code_txn(session, code, description, expiration_time, percent_off))
 

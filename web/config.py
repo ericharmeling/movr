@@ -5,6 +5,7 @@ class Config(object):
     DEBUG = True
     TESTING = True
     ENV = 'development'
+    SERVER_REGION = os.environ['REGION']
     SECRET_KEY = os.urandom(16)
     DB_HOST = 'localhost'
     DB_PORT = 26257

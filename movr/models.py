@@ -18,7 +18,6 @@ class User(Base, UserMixin):
     email = Column(String)
     username = Column(String, unique=True)
     password_hash = Column(String)
-    promos_used = Column(ARRAY(String))
     is_owner = Column(Boolean)
 
     def set_password(self, password):
@@ -59,17 +58,4 @@ class Ride(Base):
 
     def __repr__(self):
         return "<Ride(city='%s', id='%s', rider_id='%s', vehicle_id='%s')>" % (self.city, self.id, self.rider_id, self.vehicle_id)
-
-
-class PromoCode(Base):
-    __tablename__ = 'promo_codes'
-    code = Column(String, primary_key=True)
-    description = Column(String)
-    creation_time = Column(DateTime, default=datetime.datetime.now)
-    expiration_time = Column(DateTime)
-    percent_off = Column(Integer, CheckConstraint('percent_off BETWEEN 0 AND 100'))
-
-    def __repr__(self):
-        return "<PromoCode(code='%s', description='%s', expiration_time='%s', percent_off='%s')>" % \
-               (self.code, self.description, self.expiration_time, self.percent_off)
 
