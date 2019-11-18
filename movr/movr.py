@@ -19,8 +19,8 @@ class MovR:
         self.session.close()
 
 
-    def start_ride(self, city, rider_id, vehicle_id):
-        return run_transaction(sessionmaker(bind=self.engine), lambda session: start_ride_txn(session, city, rider_id, vehicle_id))
+    def start_ride(self, city, rider_id, rider_city, vehicle_id):
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: start_ride_txn(session, city, rider_id, rider_city, vehicle_id))
 
 
     def end_ride(self, city, ride_id, location):
@@ -55,6 +55,6 @@ class MovR:
         return run_transaction(sessionmaker(bind=self.engine), lambda session: get_vehicles_txn(session, city))
 
 
-    def get_rides(self, city, rider_id):
-        return run_transaction(sessionmaker(bind=self.engine), lambda session: get_rides_txn(session, city, rider_id))
+    def get_rides(self, rider_id):
+        return run_transaction(sessionmaker(bind=self.engine), lambda session: get_rides_txn(session, rider_id))
 

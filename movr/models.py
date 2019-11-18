@@ -46,8 +46,9 @@ class Vehicle(Base):
 class Ride(Base):
     __tablename__ = 'rides'
     id = Column(UUID, default=str(uuid.uuid4()), primary_key=True)
-    city = Column(String, primary_key=True)
+    city = Column(String, ForeignKey('vehicles.city'), primary_key=True)
     rider_id = Column(UUID, ForeignKey('users.id'))
+    rider_city = Column(String, ForeignKey('users.city'))
     vehicle_id = Column(UUID, ForeignKey('vehicles.id'))
     start_location = Column(String)
     end_location = Column(String)

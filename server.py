@@ -34,10 +34,10 @@ def home_page():
         client_location = Location(city='new york')
     else:
         client_location = Location(ip=request.remote_addr)
-        session['city'] = client_location.city
+    session['city'] = client_location.city
     session['region'] = client_location.region
     session['riding'] = None
-    return render_template('home.html', available=session['region'])
+    return render_template('home.html', available=session['region'], city=session['city'])
 
 
 # Login page 
@@ -54,7 +54,6 @@ def login():
                     flash(Markup('Invalid user credentials.<br>If you aren\'t registered with MovR, go <a href="{0}">Sign Up</a>!').format(url_for('register')))
                     return redirect(url_for('login'))
                 login_user(user)
-                print(current_user.is_active)
                 return redirect(url_for('home_page'))
             except Exception as error:
                 flash('{0}'.format(error))
@@ -110,7 +109,7 @@ def remove_user(user_id):
 @app.route('/vehicles', methods=['GET'])
 def vehicles():
     form = StartRideForm()
-    vehicles = movr.get_vehicles(current_user.city)
+    vehicles = movr.get_vehicles(session['city'])
     return render_template('vehicles.html', title='Vehicles', vehicles=vehicles, form=form, available=session['region']) 
 
 
@@ -144,7 +143,7 @@ def remove_vehicle(vehicle_id):
 @app.route('/rides', methods=['GET'])
 def rides():
     form = EndRideForm()
-    rides = movr.get_rides(city=current_user.city, rider_id=current_user.id)
+    rides = movr.get_rides(rider_id=current_user.id)
     for ride in rides:
         if current_user.id == ride['rider_id']:
             if ride['end_time'] == None:
@@ -162,13 +161,12 @@ def start_ride(vehicle_id):
             flash('You are already riding. End your current ride before starting a new one!')
             return redirect(url_for('rides'))
         else:
-            rides = movr.get_rides(city=current_user.city, rider_id=current_user.id)
+            rides = movr.get_rides(rider_id=current_user.id)
             for r in rides:
-                if current_user.id == r['rider_id']:
-                    if r['end_time'] == None:
-                        session['riding'] = True
-                        pass
-        movr.start_ride(city=current_user.city, rider_id=current_user.id, vehicle_id=vehicle_id)
+                if r['end_time'] == None:
+                    session['riding'] = True
+                    pass
+        movr.start_ride(city=session['city'], rider_id=current_user.id, rider_city=current_user.city, vehicle_id=vehicle_id)
         session['riding'] = True
         flash('Ride started.')
         return redirect(url_for('rides'))
@@ -183,7 +181,7 @@ def start_ride(vehicle_id):
 def end_ride(ride_id):
     try:
         form = EndRideForm()
-        movr.end_ride(city=current_user.city, ride_id=ride_id, location=form.location.data)
+        movr.end_ride(city=session['city'], ride_id=ride_id, location=form.location.data)
         session['riding'] = False
         flash('Ride ended.')
         return redirect(url_for('rides'))
@@ -197,7 +195,7 @@ def end_ride(ride_id):
 @app.route('/users', methods=['GET'])
 def users():
     if current_user.is_authenticated:
-        users = movr.get_users(current_user.city)
+        users = movr.get_users(session['city'])
         return render_template('users.html', title='Users', users=users, available=session['region'])
     else:
         flash('You need to log in to see active users in your city!')
@@ -208,7 +206,7 @@ def users():
 @app.route('/users/<user_id>', methods=['GET'])
 def user(user_id):
     v = movr.get_vehicles(city=current_user.city)
-    r = movr.get_rides(city=current_user.city, rider_id=current_user.id)
+    r = movr.get_rides(rider_id=current_user.id)
     total = 0
     for ride in r:
         if ride['revenue']:
