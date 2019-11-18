@@ -1,0 +1,46 @@
+# Deployment object
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: movr-app
+  labels:
+    app: movr-app
+spec:
+  replicas: 1
+  selector:
+    labels:
+      app: movr-app
+  template:
+    metadata:
+      labels:
+        app: movr-app
+    spec:
+      containers:
+        - image: gcr.io/movr-test-259013/movr-app:v1
+          name: movr-app
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+          - mountPath: "cert_dir"
+            name: ca-certs
+            readOnly: true
+      volumes:
+        - name: ca-certs
+          secret:
+            secretName: user-secret
+---
+# Service object
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: movr-app
+  name: movr-app
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    name: movr-app
+  selector:
+    app: movr-app
+  type: LoadBalancer
