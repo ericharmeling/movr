@@ -1,0 +1,13 @@
+cockroachdb
+psycopg2-binary
+geocoder
+requests
+SQLAlchemy
+SQLAlchemy-Utils
+Flask
+Flask-SQLAlchemy
+Flask-WTF
+Flask-Bootstrap
+Flask-Login
+WTForms
+gunicorn
