@@ -20,7 +20,10 @@ class DevConfig(Config):
     DB_USER = os.environ['DB_USER']
     DB_NAME = 'movr'
     DEFAULT_DATABASE_URI = 'cockroachdb://{}@{}:{}/{}'.format(DB_USER, DB_HOST, DB_PORT, 'defaultdb')
-    DATABASE_URI = 'cockroachdb://{}@{}:{}/{}'.format(DB_USER, DB_HOST, DB_PORT, DB_NAME)
+    try:
+        DATABASE_URI = os.environ['DB_URI']
+    except:
+        DATABASE_URI = 'cockroachdb://{}@{}:{}/{}'.format(DB_USER, DB_HOST, DB_PORT, DB_NAME)
 
 
 class ProductionConfig(DevConfig):
