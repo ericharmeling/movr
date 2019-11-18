@@ -8,6 +8,7 @@
         {% if current_user.id == ride.rider_id %}
         <a class="list-group-item flex-column align-items-start">
             <h5 class="mb-1">Ride ID: {{ ride.id }}</h5>
+            <p>City: <bf class="text-capitalize">{{ ride.city }}</bf></p>
             <p>Vehicle ID: {{ ride.vehicle_id }}</p>
             <p>This ride started {{ ride.start_time }}.</p>
             {% if ride.end_time != None %}
