@@ -1,4 +1,4 @@
-DROP DATABASE movr CASCADE; 
+DROP DATABASE IF EXISTS movr CASCADE; 
 
 
 CREATE DATABASE movr;
@@ -75,12 +75,12 @@ ALTER PARTITION us_west OF INDEX movr.public.vehicles@vehicles_auto_index_fk_cit
 ;
 
 
-CREATE TABLE IF NOT EXISTS rides (
+CREATE TABLE rides (
     id UUID NOT NULL,
     city STRING NOT NULL,
-    rider_id UUID NULL,
     vehicle_id UUID NULL,
-    vehicle_city STRING NULL,
+    rider_id UUID NULL,
+    rider_city STRING NOT NULL,
     start_location STRING NULL,
     end_location STRING NULL,
     start_time TIMESTAMP NULL,
@@ -89,26 +89,24 @@ CREATE TABLE IF NOT EXISTS rides (
     revenue DECIMAL(10,2) NULL,
     CONSTRAINT "primary" PRIMARY KEY (city ASC, id ASC),
     CONSTRAINT check_city CHECK (city IN ('amsterdam','boston','los angeles','new york','paris','rome','san francisco','seattle','washington dc')),
-    CONSTRAINT fk_city_ref_users FOREIGN KEY (city, rider_id) REFERENCES users(city, id),
-    CONSTRAINT fk_vehicle_city_ref_vehicles FOREIGN KEY (vehicle_city, vehicle_id) REFERENCES vehicles(city, id),
-    INDEX rides_auto_index_fk_city_ref_users (city ASC, rider_id ASC) PARTITION BY LIST (city) (
+    CONSTRAINT fk_city_ref_users FOREIGN KEY (rider_city, rider_id) REFERENCES users(city, id),
+    CONSTRAINT fk_vehicle_city_ref_vehicles FOREIGN KEY (city, vehicle_id) REFERENCES vehicles(city, id),
+    INDEX rides_auto_index_fk_city_ref_users (rider_city ASC, rider_id ASC) PARTITION BY LIST (rider_city) (
         PARTITION us_west VALUES IN (('seattle'), ('san francisco'), ('los angeles')),
         PARTITION us_east VALUES IN (('new york'), ('boston'), ('washington dc')),
         PARTITION europe_west VALUES IN (('amsterdam'), ('paris'), ('rome'))
     ),
-    INDEX rides_auto_index_fk_vehicle_city_ref_vehicles (vehicle_city ASC, vehicle_id ASC) PARTITION BY LIST (vehicle_city) (
+    INDEX rides_auto_index_fk_vehicle_city_ref_vehicles (city ASC, vehicle_id ASC) PARTITION BY LIST (city) (
         PARTITION us_west VALUES IN (('seattle'), ('san francisco'), ('los angeles')),
         PARTITION us_east VALUES IN (('new york'), ('boston'), ('washington dc')),
         PARTITION europe_west VALUES IN (('amsterdam'), ('paris'), ('rome'))
     ),
-    FAMILY "primary" (id, city, rider_id, vehicle_id, vehicle_city, start_location, end_location, start_time, end_time, length, revenue),
-    CONSTRAINT check_vehicle_city_city CHECK (vehicle_city = city)
-) PARTITION BY LIST (city) (
-    PARTITION us_west VALUES IN (('seattle'), ('san francisco'), ('los angeles')),
-    PARTITION us_east VALUES IN (('new york'), ('boston'), ('washington dc')),
-    PARTITION europe_west VALUES IN (('amsterdam'), ('paris'), ('rome'))
+    FAMILY "primary" (id, city, rider_id, rider_city, vehicle_id, start_location, end_location, start_time, end_time, length, revenue)
+)  PARTITION BY LIST (city) (
+        PARTITION us_west VALUES IN (('seattle'), ('san francisco'), ('los angeles')),
+        PARTITION us_east VALUES IN (('new york'), ('boston'), ('washington dc')),
+        PARTITION europe_west VALUES IN (('amsterdam'), ('paris'), ('rome'))
 );
-
 ALTER PARTITION europe_west OF INDEX movr.public.rides@primary CONFIGURE ZONE USING
     constraints = '[+region=europe-west1]';
 ALTER PARTITION us_east OF INDEX movr.public.rides@primary CONFIGURE ZONE USING
