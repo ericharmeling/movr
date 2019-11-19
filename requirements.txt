@@ -11,3 +11,4 @@ Flask-Bootstrap
 Flask-Login
 WTForms
 gunicorn
+geopy
