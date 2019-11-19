@@ -11,6 +11,6 @@ ENV DB_URI 'cockroachdb://root@127.0.0.1:58827/movr'
 ENV SECRET_KEY 'key'
 ENV REGION 'us-east1'
 
-EXPOSE 5000
+EXPOSE 8080
 
-CMD ["python3", "server.py"]
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "server:app"]
