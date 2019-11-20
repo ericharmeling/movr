@@ -19,6 +19,7 @@ class DevConfig(Config):
     DB_PORT = os.environ['DB_PORT']
     DB_USER = os.environ['DB_USER']
     DB_NAME = 'movr'
+    API_KEY = os.environ['API_KEY']
     DEFAULT_DATABASE_URI = 'cockroachdb://{}@{}:{}/{}'.format(DB_USER, DB_HOST, DB_PORT, 'defaultdb')
     try:
         DATABASE_URI = os.environ['DB_URI']
