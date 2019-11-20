@@ -31,9 +31,13 @@ def load_user(user_id):
 @app.route('/home', methods=['GET'])
 def home_page():
     if app.config.get('DEBUG'):
-        client_location = Location(city='new york')
+        client_location = Location(latlong='40.712775,-74.005973')
     else:
-        client_location = Location(ip=request.remote_addr)
+        try:
+            latlong = request.headers.getlist("X-Appengine-Citylatlong")[0]
+            client_location = Location(latlong=latlong)
+        except Exception as error:
+            flash('{0}'.format(error))
     session['city'] = client_location.city
     session['region'] = client_location.region
     session['riding'] = None
@@ -110,7 +114,7 @@ def remove_user(user_id):
 def vehicles():
     form = StartRideForm()
     vehicles = movr.get_vehicles(session['city'])
-    return render_template('vehicles.html', title='Vehicles', vehicles=vehicles, form=form, available=session['region']) 
+    return render_template('vehicles.html', title='Vehicles', vehicles=vehicles, form=form, available=session['region'], API_KEY = app.config.get('API_KEY')) 
 
 
 # Add vehicles route
@@ -135,7 +139,7 @@ def add_vehicle():
 def remove_vehicle(vehicle_id):
     movr.remove_vehicle(city=current_user.city, vehicle_id=vehicle_id)
     flash('You have successfully removed a vehicle.')
-    return redirect('/home')
+    return redirect('/users/{0}'.format(current_user.id))
 
 
 # Rides page
@@ -214,7 +218,7 @@ def user(user_id):
     form_u = RemoveUserForm()
     form_v = RemoveVehicleForm()
     if current_user.is_authenticated and user_id == current_user.id:
-        return render_template('user.html', title='{0} {1}'.format(current_user.first_name, current_user.last_name), form_u=form_u, form_v=form_v, vehicles=v, total=total, available=session['region'])
+        return render_template('user.html', title='{0} {1}'.format(current_user.first_name, current_user.last_name), form_u=form_u, form_v=form_v, vehicles=v, total=total, available=session['region'], API_KEY = app.config.get('API_KEY'))
     else:
         flash('You need to log in to see your profile!')
         return redirect(url_for('login'))
