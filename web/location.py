@@ -1,13 +1,11 @@
-import geocoder
+from geopy.geocoders import Nominatim
 
 class Location():
-    def __init__(self, ip=None, city=None):
-        if ip:
-            g = geocoder.ip(ip)
-            city = g.city
-        elif city:
-            city=city
-        self.city = city
+    def __init__(self, latlong):
+        geolocator = Nominatim(user_agent="movr-app")
+        g = geolocator.reverse(latlong)
+        city = g.raw['address']['city']
+        self.city = city.lower()
         self.region = self.get_region()
     def get_region(self):
         if self.city in ('new york', 'boston', 'washington_dc'):
