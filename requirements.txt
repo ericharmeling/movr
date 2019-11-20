@@ -1,7 +1,5 @@
 cockroachdb
 psycopg2-binary
-geocoder
-requests
 SQLAlchemy
 SQLAlchemy-Utils
 Flask

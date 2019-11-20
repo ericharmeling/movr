@@ -8,9 +8,6 @@ verify_ssl = true
 [packages]
 cockroachdb = "*"
 psycopg2-binary = "*"
-geopy = "*"
-geocoder = "*"
-requests = "*"
 SQLAlchemy = "*"
 SQLAlchemy-Utils = "*"
 Flask = "*"
@@ -20,6 +17,7 @@ Flask-Bootstrap = "*"
 Flask-Login = "*"
 WTForms = "*"
 gunicorn = "*"
+geopy = "*"
 
 [requires]
 python_version = "3.7"
