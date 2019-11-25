@@ -55,7 +55,6 @@ class Ride(Base):
     start_time = Column(DateTime, default=datetime.datetime.now)
     end_time = Column(DateTime)
     length = Column(Interval)
-    revenue = Column(DECIMAL(10,2))
 
     def __repr__(self):
         return "<Ride(city='%s', id='%s', rider_id='%s', vehicle_id='%s')>" % (self.city, self.id, self.rider_id, self.vehicle_id)
