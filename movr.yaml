@@ -2,14 +2,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: movr-app
+  name: movr-deployment
   labels:
     app: movr-app
 spec:
-  replicas: 1
   selector:
-    labels:
+    matchLabels:
       app: movr-app
+  replicas: 2
   template:
     metadata:
       labels:
@@ -20,14 +20,6 @@ spec:
           name: movr-app
           ports:
             - containerPort: 8080
-          volumeMounts:
-          - mountPath: "cert_dir"
-            name: ca-certs
-            readOnly: true
-      volumes:
-        - name: ca-certs
-          secret:
-            secretName: user-secret
 ---
 # Service object
 apiVersion: v1
@@ -40,7 +32,9 @@ spec:
   ports:
   - port: 80
     protocol: TCP
-    name: movr-app
+    targetPort: 8080
+    name: http
+    nodePort: 30062
   selector:
     app: movr-app
-  type: LoadBalancer
+  type: NodePort
