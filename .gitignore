@@ -4,3 +4,4 @@ flaskenv/*
 Pipfile.lock
 *.env
 .idea/vcs.xm
+certs/
