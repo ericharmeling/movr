@@ -8,7 +8,7 @@ from sqlalchemy.exc import DBAPIError
 from movr.movr import MovR
 from web.forms import CredentialForm, RegisterForm, VehicleForm, StartRideForm, EndRideForm, RemoveUserForm, RemoveVehicleForm
 from web.config import DevConfig
-from web.location import Location
+from web.utils import get_region
 
 # Initialize the app
 app = Flask(__name__)
@@ -17,7 +17,10 @@ bootstrap = Bootstrap(app)
 login = LoginManager(app)
 
 # Initialize the db connection
-conn_string = app.config.get('DATABASE_URI')
+if app.config.get('DEBUG') == 'True':
+    conn_string = app.config.get('DEBUG_URI')
+else:
+    conn_string = app.config.get('DB_URI')
 movr = MovR(conn_string)
 
 # Define user_loader function for login manager
@@ -30,16 +33,15 @@ def load_user(user_id):
 @app.route('/', methods=['GET'])
 @app.route('/home', methods=['GET'])
 def home_page():
-    if app.config.get('DEBUG'):
-        client_location = Location(latlong='40.712775,-74.005973')
+    if app.config.get('DEBUG') == 'True':
+        session['city'] = 'new york'
     else:
         try:
-            latlong = request.headers.getlist("X-Appengine-Citylatlong")[0]
-            client_location = Location(latlong=latlong)
+            session['city'] = request.headers.get("X-City").lower()
         except Exception as error:
-            flash('{0}'.format(error))
-    session['city'] = client_location.city
-    session['region'] = client_location.region
+            session['city'] = 'new york'
+            flash('{0} {1}'.format(error, '\nUnable to retrieve client city information.\n Application is now assuming you are in New York.'))
+    session['region'] = get_region(session['city'])
     session['riding'] = None
     return render_template('home.html', available=session['region'], city=session['city'])
 
@@ -88,8 +90,7 @@ def register():
                 flash('Registration successful! You can now log in as {0}.'.format(form.username.data))
                 return redirect(url_for('login'))
             except DBAPIError as sql_error:
-                print(sql_error)
-                flash('Registration failed. Make sure that you choose a unique username!')
+                flash('{0} {1}'.format(sql_error, '\nRegistration failed. Make sure that you choose a unique username!'))
                 return redirect(url_for('register'))
             except Exception as error:
                 flash('{0}'.format(error))
@@ -211,14 +212,10 @@ def users():
 def user(user_id):
     v = movr.get_vehicles(city=current_user.city)
     r = movr.get_rides(rider_id=current_user.id)
-    total = 0
-    for ride in r:
-        if ride['revenue']:
-            total = total + ride['revenue']
     form_u = RemoveUserForm()
     form_v = RemoveVehicleForm()
     if current_user.is_authenticated and user_id == current_user.id:
-        return render_template('user.html', title='{0} {1}'.format(current_user.first_name, current_user.last_name), form_u=form_u, form_v=form_v, vehicles=v, total=total, available=session['region'], API_KEY = app.config.get('API_KEY'))
+        return render_template('user.html', title='{0} {1}'.format(current_user.first_name, current_user.last_name), form_u=form_u, form_v=form_v, vehicles=v, available=session['region'], API_KEY = app.config.get('API_KEY'))
     else:
         flash('You need to log in to see your profile!')
         return redirect(url_for('login'))
