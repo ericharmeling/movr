@@ -14,7 +14,6 @@
                     <p>This ride started {{ ride.start_time }}.</p>
                     {% if ride.end_time != None %}
                         <p>This ride ended {{ ride.end_time }}, for a total length of {{ ride.length }}.</p>
-                        <p>The ride cost is ${{ ride.revenue }}.</p>
                     {% endif %}
                     <div class="d-flex w-100 justify-content-between">
                         {% if ride.end_time == None %}

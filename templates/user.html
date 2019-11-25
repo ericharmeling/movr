@@ -7,9 +7,6 @@
     <p class="text-center">You are registered in <bf class="text-capitalize">{{ current_user.city }}</bf>.</p>
     <p class="text-center">Your user ID is {{ current_user.id }}.</p>
 {% endif %}
-{% if total > 0 %}
-    <p class="text-center">You owe ${{ total }}!</p>
-{% endif %}
 <hr>
 {% if current_user.is_owner %}
     <h3 class="text-center">Your vehicles</h4>
@@ -42,7 +39,7 @@
             {% endif %}
         {% endfor %}
 {% endif %}
-{% if total == 0 and not vehicles %}
+{% if not vehicles %}
     <hr>
     <div class="text-center"> 
         <form class="form form-horizontal" method="POST" action="/users/remove/{{ current_user.id }}">
