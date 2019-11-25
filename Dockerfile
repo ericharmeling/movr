@@ -4,12 +4,11 @@ COPY . /
 
 RUN pip install -r requirements.txt
 
-ENV DB_HOST 'localhost'
-ENV DB_PORT 26257
-ENV DB_USER 'root'
-ENV DB_URI 'cockroachdb://root@127.0.0.1:58827/movr'
+ENV DEBUG 'False'
 ENV SECRET_KEY 'key'
-ENV REGION 'us-east1'
+ENV REGION 'gcp-us-east1'
+ENV DB_URI 'connection_string'
+ENV API_KEY 'API_key'
 
 EXPOSE 8080
 
